@@ -7,6 +7,9 @@ import {PaperList} from './components/papers/PaperList.js';
 import {PaperDetail} from './components/papers/PaperDetail.js';
 import {DateBrowser} from './components/papers/DateBrowser.js';
 import {CategoryBrowser} from './components/papers/CategoryBrowser.js';
+import {AuthorSearch} from './components/authors/AuthorSearch.js';
+import {AuthorList} from './components/authors/AuthorList.js';
+import {AuthorProfile} from './components/authors/AuthorProfile.js';
 import {Header} from './components/common/Header.js';
 import {Footer} from './components/common/Footer.js';
 
@@ -67,7 +70,15 @@ function Router() {
 		}
 
 		case 'author-search': {
-			return <PlaceholderScreen title="Search Authors" />;
+			return <AuthorSearch />;
+		}
+
+		case 'author-list': {
+			return <AuthorList />;
+		}
+
+		case 'author-profile': {
+			return <AuthorProfile />;
 		}
 
 		case 'settings': {

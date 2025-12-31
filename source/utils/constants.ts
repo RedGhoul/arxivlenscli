@@ -24,6 +24,8 @@ export type Route =
 	| 'date-browser'
 	| 'category-browser'
 	| 'author-search'
+	| 'author-list'
+	| 'author-profile'
 	| 'settings';
 
 export const MENU_ITEMS = [

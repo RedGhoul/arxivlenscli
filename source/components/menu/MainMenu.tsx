@@ -15,7 +15,7 @@ export function MainMenu() {
 			return;
 		}
 
-		if (item.value === 'author-search' || item.value === 'settings') {
+		if (item.value === 'settings') {
 			return;
 		}
 
@@ -30,9 +30,7 @@ export function MainMenu() {
 
 	const items = MENU_ITEMS.map(item => ({
 		label:
-			item.value === 'author-search' || item.value === 'settings'
-				? `${item.label} (coming soon)`
-				: item.label,
+			item.value === 'settings' ? `${item.label} (coming soon)` : item.label,
 		value: item.value,
 	}));
 

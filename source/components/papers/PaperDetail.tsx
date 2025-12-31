@@ -11,7 +11,7 @@ import {useApp} from '../../context/AppContext.js';
 import {formatDate, formatAuthors} from '../../utils/formatting.js';
 
 export function PaperDetail() {
-	const {params, goBack} = useNavigation();
+	const {params, goBack, navigate} = useNavigation();
 	const {selectedPaper} = useApp();
 	const {fetchDetail, data, loading, error} = usePaperDetail();
 	const [showFullAbstract, setShowFullAbstract] = useState(false);
@@ -33,12 +33,21 @@ export function PaperDetail() {
 		}
 
 		if (paper) {
-			if (input === 'a') {
+			if (input === 'o') {
 				await open(paper.arxivLink);
 			}
 
 			if (input === 'p') {
 				await open(paper.pdfLink);
+			}
+
+			if (input === 'a') {
+				const firstAuthor = paper.authors[0];
+				if (firstAuthor) {
+					navigate('author-profile', {
+						authorSlug: firstAuthor.genSlug,
+					});
+				}
 			}
 
 			if (input === 'm') {
@@ -159,7 +168,8 @@ export function PaperDetail() {
 				<Text color="gray">Actions:</Text>
 				<Text>
 					{'  '}
-					<Text color="yellow">[a]</Text> Open on arXiv{'  '}
+					<Text color="yellow">[a]</Text> View Authors{'  '}
+					<Text color="yellow">[o]</Text> Open arXiv{'  '}
 					<Text color="yellow">[p]</Text> Open PDF
 				</Text>
 			</Box>

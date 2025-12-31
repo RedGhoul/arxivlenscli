@@ -73,3 +73,34 @@ export interface SearchParams {
 	prioritizeRecent?: boolean;
 	prioritizeCited?: boolean;
 }
+
+// Phase 2: Author types
+
+export interface SimplifiedPaperInfo {
+	title: string;
+	twoLineSummary: string | null;
+	categories: string;
+	paperId: string;
+	genSlug: string;
+	published: string;
+}
+
+export interface AuthorProfile {
+	name: string;
+	genSlug: string;
+	paperCount: number;
+	paperTitles: string[];
+	papers: SimplifiedPaperInfo[];
+}
+
+export interface AuthorSearchResponse {
+	authors: AuthorProfile[];
+	totalCount: number;
+	page: number;
+	pageSize: number;
+	totalPages: number;
+	hasNextPage: boolean;
+	hasPreviousPage: boolean;
+}
+
+export type AuthorProfileResponse = AuthorProfile;
