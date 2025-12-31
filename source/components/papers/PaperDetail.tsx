@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Box, Text, useInput} from 'ink';
+import {Box, Text, useInput, useApp as useInkApp} from 'ink';
 import open from 'open';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
@@ -15,6 +15,7 @@ export function PaperDetail() {
 	const {selectedPaper} = useApp();
 	const {fetchDetail, data, loading, error} = usePaperDetail();
 	const [showFullAbstract, setShowFullAbstract] = useState(false);
+	const {exit} = useInkApp();
 
 	const paperId = params['paperId'] as string;
 
@@ -27,8 +28,13 @@ export function PaperDetail() {
 	const paper = data?.paper ?? selectedPaper;
 
 	useInput(async (input, key) => {
-		if (key.escape || input === 'q') {
+		if (key.escape) {
 			goBack();
+			return;
+		}
+
+		if (input === 'q') {
+			exit();
 			return;
 		}
 
@@ -52,6 +58,13 @@ export function PaperDetail() {
 
 			if (input === 'm') {
 				setShowFullAbstract(!showFullAbstract);
+			}
+
+			if (input === 'k') {
+				navigate('key-findings', {
+					paperId: fullPaper.genSlug,
+					paperTitle: fullPaper.title,
+				});
 			}
 		}
 	});
@@ -169,6 +182,7 @@ export function PaperDetail() {
 				<Text>
 					{'  '}
 					<Text color="yellow">[a]</Text> View Authors{'  '}
+					<Text color="yellow">[k]</Text> Key Findings{'  '}
 					<Text color="yellow">[o]</Text> Open arXiv{'  '}
 					<Text color="yellow">[p]</Text> Open PDF
 				</Text>

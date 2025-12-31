@@ -104,3 +104,29 @@ export interface AuthorSearchResponse {
 }
 
 export type AuthorProfileResponse = AuthorProfile;
+
+// Phase 3: Key Findings types
+
+export interface KeyFindings {
+	methodology: string | null;
+	keyResults: string[];
+	significance: string | null;
+	limitations: string[];
+	futureWork: string[];
+	technicalContribution: string | null;
+	novelty: string | null;
+}
+
+export interface KeyFindingsResponse {
+	status: string;
+	generatedAt: string;
+	llmModelVersion: string;
+	findings: KeyFindings;
+}
+
+export interface KeyFindingsStatusResponse {
+	status: string;
+	message: string;
+	retryCount: number;
+	updatedAt: string;
+}

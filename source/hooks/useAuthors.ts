@@ -8,7 +8,7 @@ export function useAuthorSearch() {
 	const search = useCallback(
 		(authorName: string, page?: number, pageSize?: number) =>
 			api.execute(authorName, page, pageSize),
-		[api],
+		[api.execute],
 	);
 
 	return {
@@ -22,7 +22,7 @@ export function useAuthorProfile() {
 
 	const fetchProfile = useCallback(
 		(genSlug: string) => api.execute(genSlug),
-		[api],
+		[api.execute],
 	);
 
 	return {

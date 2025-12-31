@@ -21,6 +21,7 @@ export type Route =
 	| 'paper-search'
 	| 'paper-list'
 	| 'paper-detail'
+	| 'key-findings'
 	| 'date-browser'
 	| 'category-browser'
 	| 'author-search'

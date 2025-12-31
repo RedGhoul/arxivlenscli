@@ -13,7 +13,7 @@ export function usePaperSearch() {
 
 	const search = useCallback(
 		(params: SearchParams) => api.execute(params),
-		[api],
+		[api.execute],
 	);
 
 	return {
@@ -28,7 +28,7 @@ export function usePapersByDate() {
 	const fetchByDate = useCallback(
 		(date: string, page?: number, limit?: number) =>
 			api.execute(date, page, limit),
-		[api],
+		[api.execute],
 	);
 
 	return {
@@ -42,7 +42,7 @@ export function usePaperDetail() {
 
 	const fetchDetail = useCallback(
 		(identifier: string) => api.execute(identifier),
-		[api],
+		[api.execute],
 	);
 
 	return {
@@ -54,7 +54,7 @@ export function usePaperDetail() {
 export function useCategories() {
 	const api = useApi(getCategories);
 
-	const fetchCategories = useCallback(() => api.execute(), [api]);
+	const fetchCategories = useCallback(() => api.execute(), [api.execute]);
 
 	return {
 		...api,
