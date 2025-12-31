@@ -4,26 +4,32 @@ import {render} from 'ink';
 import meow from 'meow';
 import App from './app.js';
 
-const cli = meow(
+meow(
 	`
 	Usage
 	  $ arxivlenscli
 
-	Options
-		--name  Your name
+	Navigation
+	  Arrow keys  Navigate menus and lists
+	  Enter       Select/confirm
+	  Tab         Next field (in forms)
+	  Esc         Go back
+	  q           Quit (from main menu)
+	  Q           Force quit (from anywhere)
 
-	Examples
-	  $ arxivlenscli --name=Jane
-	  Hello, Jane
+	Paper Actions
+	  a           Open paper on arXiv
+	  p           Open PDF
+	  m           Toggle full abstract
+
+	Pagination
+	  n / →       Next page
+	  p / ←       Previous page
 `,
 	{
 		importMeta: import.meta,
-		flags: {
-			name: {
-				type: 'string',
-			},
-		},
+		flags: {},
 	},
 );
 
-render(<App name={cli.flags.name} />);
+render(<App />);

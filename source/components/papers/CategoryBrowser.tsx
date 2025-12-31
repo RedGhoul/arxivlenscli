@@ -1,0 +1,147 @@
+import React, {useState, useEffect} from 'react';
+import {Box, useInput} from 'ink';
+import SelectInput from 'ink-select-input';
+import {Header} from '../common/Header.js';
+import {Footer} from '../common/Footer.js';
+import {Spinner} from '../common/Spinner.js';
+import {ErrorMessage} from '../common/ErrorMessage.js';
+import {useNavigation} from '../../hooks/useNavigation.js';
+import {useCategories, usePaperSearch} from '../../hooks/usePapers.js';
+import {useApp} from '../../context/AppContext.js';
+import type {CategoryGroup} from '../../api/types.js';
+
+type Level = 'groups' | 'categories';
+
+export function CategoryBrowser() {
+	const {navigate, goBack} = useNavigation();
+	const {
+		fetchCategories,
+		data: categoriesData,
+		loading: loadingCategories,
+		error: categoriesError,
+	} = useCategories();
+	const {search, loading: loadingPapers, error: searchError} = usePaperSearch();
+	const {setPapersList, setLastSearchParams} = useApp();
+
+	const [level, setLevel] = useState<Level>('groups');
+	const [selectedGroup, setSelectedGroup] = useState<CategoryGroup | null>(
+		null,
+	);
+
+	useEffect(() => {
+		fetchCategories();
+	}, [fetchCategories]);
+
+	const handleGroupSelect = (item: {value: string}) => {
+		const group = categoriesData?.find(g => g.name === item.value);
+		if (group) {
+			setSelectedGroup(group);
+			setLevel('categories');
+		}
+	};
+
+	const handleCategorySelect = async (item: {value: string}) => {
+		const categoryCode = item.value;
+		const params = {
+			categories: [categoryCode],
+			page: 1,
+			pageSize: 20,
+		};
+
+		const result = await search(params);
+		if (result) {
+			setLastSearchParams(params);
+			setPapersList(result.papers);
+			navigate('paper-list', {
+				title: `Category: ${categoryCode}`,
+				source: 'category',
+				category: categoryCode,
+				searchParams: params,
+				totalCount: result.totalCount,
+				page: result.page,
+				totalPages: result.totalPages,
+				hasNext: result.hasNextPage,
+				hasPrev: result.hasPreviousPage,
+			});
+		}
+	};
+
+	useInput((input, key) => {
+		if (loadingCategories || loadingPapers) return;
+
+		if (key.escape) {
+			if (level === 'categories') {
+				setLevel('groups');
+				setSelectedGroup(null);
+			} else {
+				goBack();
+			}
+
+			return;
+		}
+
+		if (input === 'q' && level === 'groups') {
+			goBack();
+		}
+	});
+
+	if (loadingCategories || loadingPapers) {
+		return (
+			<Box flexDirection="column">
+				<Header subtitle="Loading..." />
+				<Spinner
+					message={
+						loadingCategories ? 'Loading categories...' : 'Loading papers...'
+					}
+				/>
+			</Box>
+		);
+	}
+
+	const error = categoriesError || searchError;
+	if (error) {
+		return (
+			<Box flexDirection="column">
+				<Header subtitle="Category Browser" />
+				<ErrorMessage message={error} />
+				<Footer hints={[]} />
+			</Box>
+		);
+	}
+
+	if (level === 'groups' && categoriesData) {
+		const groupItems = categoriesData.map(group => ({
+			label: `${group.name} (${group.categories.length} categories)`,
+			value: group.name,
+		}));
+
+		return (
+			<Box flexDirection="column">
+				<Header subtitle="Select a category group" />
+				<SelectInput items={groupItems} onSelect={handleGroupSelect} />
+				<Footer hints={[]} />
+			</Box>
+		);
+	}
+
+	if (level === 'categories' && selectedGroup) {
+		const categoryItems = selectedGroup.categories.map(cat => ({
+			label: `${cat.name} (${cat.code})`,
+			value: cat.code,
+		}));
+
+		return (
+			<Box flexDirection="column">
+				<Header subtitle={`${selectedGroup.name} - Select a category`} />
+				<SelectInput
+					items={categoryItems}
+					onSelect={handleCategorySelect}
+					limit={15}
+				/>
+				<Footer hints={[{key: 'Esc', action: 'Back to groups'}]} />
+			</Box>
+		);
+	}
+
+	return null;
+}

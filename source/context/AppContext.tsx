@@ -1,0 +1,102 @@
+import React, {
+	createContext,
+	useContext,
+	useState,
+	useCallback,
+	type ReactNode,
+} from 'react';
+import type {Route} from '../utils/constants.js';
+import type {PaperListItem, SearchParams} from '../api/types.js';
+
+interface NavigationState {
+	route: Route;
+	params: Record<string, unknown>;
+	history: Array<{route: Route; params: Record<string, unknown>}>;
+}
+
+interface AppState {
+	navigation: NavigationState;
+	navigate: (route: Route, params?: Record<string, unknown>) => void;
+	goBack: () => void;
+	canGoBack: boolean;
+
+	selectedPaper: PaperListItem | null;
+	setSelectedPaper: (paper: PaperListItem | null) => void;
+
+	lastSearchParams: SearchParams | null;
+	setLastSearchParams: (params: SearchParams | null) => void;
+
+	papersList: PaperListItem[];
+	setPapersList: (papers: PaperListItem[]) => void;
+}
+
+const AppContext = createContext<AppState | undefined>(undefined);
+
+export function AppProvider({children}: {children: ReactNode}) {
+	const [navigation, setNavigation] = useState<NavigationState>({
+		route: 'main-menu',
+		params: {},
+		history: [],
+	});
+	const [selectedPaper, setSelectedPaper] = useState<PaperListItem | null>(
+		null,
+	);
+	const [lastSearchParams, setLastSearchParams] = useState<SearchParams | null>(
+		null,
+	);
+	const [papersList, setPapersList] = useState<PaperListItem[]>([]);
+
+	const navigate = useCallback(
+		(route: Route, params: Record<string, unknown> = {}) => {
+			setNavigation(prev => ({
+				route,
+				params,
+				history: [...prev.history, {route: prev.route, params: prev.params}],
+			}));
+		},
+		[],
+	);
+
+	const goBack = useCallback(() => {
+		setNavigation(prev => {
+			if (prev.history.length === 0) return prev;
+			const history = [...prev.history];
+			const last = history.pop()!;
+			return {
+				route: last.route,
+				params: last.params,
+				history,
+			};
+		});
+	}, []);
+
+	const canGoBack = navigation.history.length > 0;
+
+	return (
+		<AppContext.Provider
+			value={{
+				navigation,
+				navigate,
+				goBack,
+				canGoBack,
+				selectedPaper,
+				setSelectedPaper,
+				lastSearchParams,
+				setLastSearchParams,
+				papersList,
+				setPapersList,
+			}}
+		>
+			{children}
+		</AppContext.Provider>
+	);
+}
+
+export function useApp(): AppState {
+	const context = useContext(AppContext);
+	if (!context) {
+		throw new Error('useApp must be used within an AppProvider');
+	}
+
+	return context;
+}
