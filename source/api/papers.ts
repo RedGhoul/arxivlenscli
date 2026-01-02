@@ -49,7 +49,19 @@ export async function getPaperDetail(
 	return response.data;
 }
 
+interface RawCategoriesResponse {
+	categories: Record<string, Array<{code: string; name: string}>>;
+}
+
 export async function getCategories(): Promise<CategoriesResponse> {
-	const response = await apiClient.get<CategoriesResponse>('/arxiv/categories');
-	return response.data;
+	const response = await apiClient.get<RawCategoriesResponse>(
+		'/arxiv/categories',
+	);
+	const {categories} = response.data;
+
+	// Transform the object-based response into an array of CategoryGroup
+	return Object.entries(categories).map(([name, cats]) => ({
+		name,
+		categories: cats,
+	}));
 }

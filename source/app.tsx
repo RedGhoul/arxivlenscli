@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Text, useInput, useApp as useInkApp} from 'ink';
+import {useInput, useApp as useInkApp} from 'ink';
 import {AppProvider, useApp} from './context/AppContext.js';
 import {MainMenu} from './components/menu/MainMenu.js';
 import {PaperSearch} from './components/papers/PaperSearch.js';
@@ -11,26 +11,11 @@ import {CategoryBrowser} from './components/papers/CategoryBrowser.js';
 import {AuthorSearch} from './components/authors/AuthorSearch.js';
 import {AuthorList} from './components/authors/AuthorList.js';
 import {AuthorProfile} from './components/authors/AuthorProfile.js';
-import {Header} from './components/common/Header.js';
-import {Footer} from './components/common/Footer.js';
-
-function PlaceholderScreen({title}: {title: string}) {
-	return (
-		<Box flexDirection="column">
-			<Header subtitle={title} />
-			<Box marginY={1}>
-				<Box borderStyle="round" paddingX={2}>
-					<Text color="yellow">Coming Soon</Text>
-				</Box>
-			</Box>
-			<Text color="gray">This feature is not yet implemented.</Text>
-			<Footer hints={[]} />
-		</Box>
-	);
-}
+import {SettingsScreen} from './components/settings/SettingsScreen.js';
+import {HelpOverlay} from './components/common/HelpOverlay.js';
 
 function Router() {
-	const {navigation, goBack} = useApp();
+	const {navigation, goBack, showHelp, toggleHelp} = useApp();
 	const {exit} = useInkApp();
 
 	useInput((input, key) => {
@@ -38,10 +23,19 @@ function Router() {
 			exit();
 		}
 
+		if (input === '?' && !showHelp) {
+			toggleHelp();
+			return;
+		}
+
 		if (key.escape && navigation.route !== 'main-menu') {
 			goBack();
 		}
 	});
+
+	if (showHelp) {
+		return <HelpOverlay onClose={toggleHelp} />;
+	}
 
 	const {route} = navigation;
 
@@ -87,7 +81,7 @@ function Router() {
 		}
 
 		case 'settings': {
-			return <PlaceholderScreen title="Settings" />;
+			return <SettingsScreen />;
 		}
 
 		default: {

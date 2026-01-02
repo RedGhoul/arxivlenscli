@@ -15,10 +15,6 @@ export function MainMenu() {
 			return;
 		}
 
-		if (item.value === 'settings') {
-			return;
-		}
-
 		navigate(item.value as Route);
 	};
 
@@ -29,8 +25,7 @@ export function MainMenu() {
 	});
 
 	const items = MENU_ITEMS.map(item => ({
-		label:
-			item.value === 'settings' ? `${item.label} (coming soon)` : item.label,
+		label: item.label,
 		value: item.value,
 	}));
 

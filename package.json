@@ -17,6 +17,7 @@
 	],
 	"dependencies": {
 		"axios": "^1.13.2",
+		"conf": "^15.0.2",
 		"ink": "^4.1.0",
 		"ink-box": "^2.0.0",
 		"ink-select-input": "^5.0.0",

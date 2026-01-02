@@ -11,7 +11,10 @@ export function Footer({hints = []}: FooterProps) {
 		{key: 'q', action: 'Quit'},
 	];
 
-	const allHints = [...hints, ...defaultHints];
+	// Filter out default hints that are overridden by custom hints
+	const customKeys = new Set(hints.map(h => h.key));
+	const filteredDefaults = defaultHints.filter(h => !customKeys.has(h.key));
+	const allHints = [...hints, ...filteredDefaults];
 
 	return (
 		<Box marginTop={1}>

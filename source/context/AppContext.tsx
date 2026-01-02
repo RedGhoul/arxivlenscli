@@ -28,6 +28,9 @@ interface AppState {
 
 	papersList: PaperListItem[];
 	setPapersList: (papers: PaperListItem[]) => void;
+
+	showHelp: boolean;
+	toggleHelp: () => void;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -45,6 +48,11 @@ export function AppProvider({children}: {children: ReactNode}) {
 		null,
 	);
 	const [papersList, setPapersList] = useState<PaperListItem[]>([]);
+	const [showHelp, setShowHelp] = useState(false);
+
+	const toggleHelp = useCallback(() => {
+		setShowHelp(prev => !prev);
+	}, []);
 
 	const navigate = useCallback(
 		(route: Route, params: Record<string, unknown> = {}) => {
@@ -85,6 +93,8 @@ export function AppProvider({children}: {children: ReactNode}) {
 				setLastSearchParams,
 				papersList,
 				setPapersList,
+				showHelp,
+				toggleHelp,
 			}}
 		>
 			{children}
