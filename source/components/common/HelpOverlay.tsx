@@ -18,11 +18,18 @@ const SHORTCUTS = {
 	],
 	paperView: [
 		{key: 'o', action: 'Open arXiv'},
-		{key: 'p', action: 'Open PDF'},
+		{key: 'p', action: 'Open PDF (browser)'},
+		{key: 'v', action: 'View PDF (terminal)'},
 		{key: 'a', action: 'View authors'},
 		{key: 'k', action: 'Key findings'},
 		{key: 's', action: 'Similar papers'},
 		{key: 'm', action: 'Toggle abstract'},
+	],
+	pdfViewer: [
+		{key: 'n/p', action: 'Next/Prev page'},
+		{key: '\u2191/\u2193', action: 'Scroll up/down'},
+		{key: 'j/k', action: 'Scroll 5 lines'},
+		{key: 'i', action: 'Toggle image mode'},
 	],
 	search: [
 		{key: 'Tab', action: 'Next field'},
@@ -79,6 +86,7 @@ export function HelpOverlay({onClose}: HelpOverlayProps) {
 
 				<Box flexDirection="column">
 					{renderSection('Navigation', SHORTCUTS.navigation)}
+					{renderSection('PDF Viewer', SHORTCUTS.pdfViewer)}
 					{renderSection('Search', SHORTCUTS.search)}
 				</Box>
 			</Box>

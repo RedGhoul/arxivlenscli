@@ -10,7 +10,8 @@ interface PaperListItemProps {
 }
 
 export function PaperListItem({paper, isSelected, index}: PaperListItemProps) {
-	const primaryCategory = paper.categories.split(' ')[0] || paper.categories;
+	const primaryCategory =
+		paper.categories?.split(' ')[0] || paper.categories || 'Unknown';
 
 	return (
 		<Box

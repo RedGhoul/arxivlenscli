@@ -8,6 +8,7 @@ import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
 import {usePapersByDate} from '../../hooks/usePapers.js';
+import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import {DATE_PRESETS} from '../../utils/constants.js';
 import {getPresetDate, getApiDateString} from '../../utils/formatting.js';
@@ -18,14 +19,15 @@ export function DateBrowser() {
 	const {navigate, goBack} = useNavigation();
 	const {fetchByDate, loading, error} = usePapersByDate();
 	const {setPapersList} = useApp();
+	const pageSize = usePageSize();
 
 	const [mode, setMode] = useState<Mode>('preset');
 	const [customDate, setCustomDate] = useState(getApiDateString(new Date()));
 
 	const loadPapersForDate = async (date: string) => {
-		const result = await fetchByDate(date);
-		if (result) {
-			setPapersList(result.papers);
+		const result = await fetchByDate(date, 1, pageSize);
+		if (result?.pagination) {
+			setPapersList(result.papers || []);
 			navigate('paper-list', {
 				title: `Papers from ${date}`,
 				source: 'date',
@@ -39,6 +41,21 @@ export function DateBrowser() {
 					result.pagination.page * result.pagination.limit <
 					result.pagination.total,
 				hasPrev: result.pagination.page > 1,
+				pageSize,
+			});
+		} else if (result) {
+			// API returned a response but without pagination (e.g., no papers for this date)
+			setPapersList(result.papers || []);
+			navigate('paper-list', {
+				title: `Papers from ${date}`,
+				source: 'date',
+				date,
+				totalCount: result.papers?.length || 0,
+				page: 1,
+				totalPages: 1,
+				hasNext: false,
+				hasPrev: false,
+				pageSize,
 			});
 		}
 	};

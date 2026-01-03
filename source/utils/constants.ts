@@ -22,6 +22,7 @@ export type Route =
 	| 'paper-list'
 	| 'paper-detail'
 	| 'key-findings'
+	| 'pdf-viewer'
 	| 'date-browser'
 	| 'category-browser'
 	| 'author-search'

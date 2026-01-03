@@ -115,7 +115,7 @@ export function AuthorProfile() {
 							<Box paddingLeft={2}>
 								<Text color="gray">
 									{formatDate(paper.published)} |{' '}
-									{paper.categories.split(' ')[0]}
+									{paper.categories?.split(' ')[0] || 'Unknown'}
 								</Text>
 							</Box>
 						</Box>

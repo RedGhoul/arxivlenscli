@@ -8,6 +8,7 @@ import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
 import {usePaperSearch} from '../../hooks/usePapers.js';
+import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import {SORT_OPTIONS} from '../../utils/constants.js';
 
@@ -17,6 +18,7 @@ export function PaperSearch() {
 	const {navigate, goBack} = useNavigation();
 	const {search, loading, error} = usePaperSearch();
 	const {setLastSearchParams, setPapersList} = useApp();
+	const pageSize = usePageSize();
 
 	const [query, setQuery] = useState('');
 	const [sortBy, setSortBy] = useState<'relevance' | 'date' | 'citations'>(
@@ -37,7 +39,7 @@ export function PaperSearch() {
 			prioritizeRecent,
 			prioritizeCited,
 			page: 1,
-			pageSize: 20,
+			pageSize,
 		};
 
 		const result = await search(params);
@@ -53,6 +55,7 @@ export function PaperSearch() {
 				totalPages: result.totalPages,
 				hasNext: result.hasNextPage,
 				hasPrev: result.hasPreviousPage,
+				pageSize,
 			});
 		}
 	};

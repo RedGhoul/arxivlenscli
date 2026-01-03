@@ -1,7 +1,10 @@
 import type {Author} from '../api/types.js';
 
-export function formatDate(isoDate: string): string {
+export function formatDate(isoDate: string | null | undefined): string {
+	if (!isoDate) return 'Unknown date';
 	const date = new Date(isoDate);
+	// Check for Invalid Date
+	if (Number.isNaN(date.getTime())) return 'Unknown date';
 	return date.toLocaleDateString('en-US', {
 		year: 'numeric',
 		month: 'short',
@@ -36,13 +39,20 @@ export function getPresetDate(preset: string): string {
 	}
 }
 
-export function truncate(text: string, maxLength: number): string {
+export function truncate(
+	text: string | null | undefined,
+	maxLength: number,
+): string {
+	if (!text) return '';
 	if (text.length <= maxLength) return text;
 	return text.slice(0, maxLength - 3) + '...';
 }
 
-export function formatAuthors(authors: Author[], maxDisplay = 3): string {
-	if (authors.length === 0) return 'Unknown authors';
+export function formatAuthors(
+	authors: Author[] | null | undefined,
+	maxDisplay = 3,
+): string {
+	if (!authors || authors.length === 0) return 'Unknown authors';
 	if (authors.length <= maxDisplay) {
 		return authors.map(a => a.name).join(', ');
 	}
@@ -51,6 +61,9 @@ export function formatAuthors(authors: Author[], maxDisplay = 3): string {
 	return `${displayed.join(', ')} +${authors.length - maxDisplay} more`;
 }
 
-export function parseCategories(categoriesStr: string): string[] {
+export function parseCategories(
+	categoriesStr: string | null | undefined,
+): string[] {
+	if (!categoriesStr) return [];
 	return categoriesStr.split(' ').filter(Boolean);
 }

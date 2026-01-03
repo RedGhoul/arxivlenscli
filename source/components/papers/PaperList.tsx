@@ -30,6 +30,7 @@ export function PaperList() {
 	const hasNext = (params['hasNext'] as boolean) || false;
 	const hasPrev = (params['hasPrev'] as boolean) || false;
 	const totalCount = (params['totalCount'] as number) || 0;
+	const pageSize = (params['pageSize'] as number) || 20;
 
 	const loading = searchLoading || dateLoading;
 	const error = searchError || dateError;
@@ -55,18 +56,29 @@ export function PaperList() {
 		} else if (source === 'date' && params['date']) {
 			const result = await fetchByDate(params['date'] as string, newPage);
 			if (result) {
-				setPapersList(result.papers);
-				navigate('paper-list', {
-					...params,
-					page: result.pagination.page,
-					totalPages: Math.ceil(
-						result.pagination.total / result.pagination.limit,
-					),
-					hasNext:
-						result.pagination.page * result.pagination.limit <
-						result.pagination.total,
-					hasPrev: result.pagination.page > 1,
-				});
+				setPapersList(result.papers || []);
+				if (result.pagination) {
+					navigate('paper-list', {
+						...params,
+						page: result.pagination.page,
+						totalPages: Math.ceil(
+							result.pagination.total / result.pagination.limit,
+						),
+						hasNext:
+							result.pagination.page * result.pagination.limit <
+							result.pagination.total,
+						hasPrev: result.pagination.page > 1,
+					});
+				} else {
+					// API returned without pagination info
+					navigate('paper-list', {
+						...params,
+						page: newPage,
+						totalPages: 1,
+						hasNext: false,
+						hasPrev: newPage > 1,
+					});
+				}
 			}
 		}
 	};
@@ -133,7 +145,7 @@ export function PaperList() {
 							key={paper.paperId}
 							paper={paper}
 							isSelected={index === selectedIndex}
-							index={(page - 1) * 20 + index}
+							index={(page - 1) * pageSize + index}
 						/>
 					))}
 				</Box>

@@ -48,7 +48,7 @@ export function PaperDetail() {
 			}
 
 			if (input === 'a') {
-				const firstAuthor = paper.authors[0];
+				const firstAuthor = paper.authors?.[0];
 				if (firstAuthor) {
 					navigate('author-profile', {
 						authorSlug: firstAuthor.genSlug,
@@ -62,8 +62,15 @@ export function PaperDetail() {
 
 			if (input === 'k') {
 				navigate('key-findings', {
-					paperId: fullPaper.genSlug,
-					paperTitle: fullPaper.title,
+					paperId: paper.genSlug,
+					paperTitle: paper.title,
+				});
+			}
+
+			if (input === 'v') {
+				navigate('pdf-viewer', {
+					pdfUrl: paper.pdfLink,
+					paperTitle: paper.title,
 				});
 			}
 		}
@@ -183,8 +190,9 @@ export function PaperDetail() {
 					{'  '}
 					<Text color="yellow">[a]</Text> View Authors{'  '}
 					<Text color="yellow">[k]</Text> Key Findings{'  '}
+					<Text color="yellow">[v]</Text> View PDF{'  '}
 					<Text color="yellow">[o]</Text> Open arXiv{'  '}
-					<Text color="yellow">[p]</Text> Open PDF
+					<Text color="yellow">[p]</Text> Open PDF (browser)
 				</Text>
 			</Box>
 

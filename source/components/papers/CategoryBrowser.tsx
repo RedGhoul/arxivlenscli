@@ -7,6 +7,7 @@ import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
 import {useCategories, usePaperSearch} from '../../hooks/usePapers.js';
+import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import type {CategoryGroup} from '../../api/types.js';
 
@@ -22,6 +23,7 @@ export function CategoryBrowser() {
 	} = useCategories();
 	const {search, loading: loadingPapers, error: searchError} = usePaperSearch();
 	const {setPapersList, setLastSearchParams} = useApp();
+	const pageSize = usePageSize();
 
 	const [level, setLevel] = useState<Level>('groups');
 	const [selectedGroup, setSelectedGroup] = useState<CategoryGroup | null>(
@@ -45,7 +47,7 @@ export function CategoryBrowser() {
 		const params = {
 			categories: [categoryCode],
 			page: 1,
-			pageSize: 20,
+			pageSize,
 		};
 
 		const result = await search(params);
@@ -62,6 +64,7 @@ export function CategoryBrowser() {
 				totalPages: result.totalPages,
 				hasNext: result.hasNextPage,
 				hasPrev: result.hasPreviousPage,
+				pageSize,
 			});
 		}
 	};

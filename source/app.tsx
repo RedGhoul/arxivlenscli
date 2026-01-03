@@ -6,6 +6,7 @@ import {PaperSearch} from './components/papers/PaperSearch.js';
 import {PaperList} from './components/papers/PaperList.js';
 import {PaperDetail} from './components/papers/PaperDetail.js';
 import {KeyFindingsView} from './components/papers/KeyFindingsView.js';
+import {PdfViewer} from './components/papers/PdfViewer.js';
 import {DateBrowser} from './components/papers/DateBrowser.js';
 import {CategoryBrowser} from './components/papers/CategoryBrowser.js';
 import {AuthorSearch} from './components/authors/AuthorSearch.js';
@@ -58,6 +59,10 @@ function Router() {
 
 		case 'key-findings': {
 			return <KeyFindingsView />;
+		}
+
+		case 'pdf-viewer': {
+			return <PdfViewer />;
 		}
 
 		case 'date-browser': {
