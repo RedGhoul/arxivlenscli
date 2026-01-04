@@ -4,6 +4,7 @@ import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
+import {Frame} from '../common/Frame.js';
 import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
@@ -12,6 +13,7 @@ import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import {DATE_PRESETS} from '../../utils/constants.js';
 import {getPresetDate, getApiDateString} from '../../utils/formatting.js';
+import {colors, symbols} from '../../theme/index.js';
 
 type Mode = 'preset' | 'custom';
 
@@ -44,7 +46,6 @@ export function DateBrowser() {
 				pageSize,
 			});
 		} else if (result) {
-			// API returned a response but without pagination (e.g., no papers for this date)
 			setPapersList(result.papers || []);
 			navigate('paper-list', {
 				title: `Papers from ${date}`,
@@ -97,7 +98,7 @@ export function DateBrowser() {
 	if (loading) {
 		return (
 			<Box flexDirection="column">
-				<Header subtitle="Loading papers..." />
+				<Header subtitle="Loading papers..." showLogo={false} compact />
 				<Spinner message="Fetching papers by date..." />
 			</Box>
 		);
@@ -106,7 +107,7 @@ export function DateBrowser() {
 	if (error) {
 		return (
 			<Box flexDirection="column">
-				<Header subtitle="Browse by Date" />
+				<Header subtitle="Browse by Date" showLogo={false} compact />
 				<ErrorMessage message={error} />
 				<Footer hints={[]} />
 			</Box>
@@ -115,38 +116,48 @@ export function DateBrowser() {
 
 	return (
 		<Box flexDirection="column">
-			<Header subtitle="Browse papers by date" />
+			<Header subtitle="Browse papers by date" showLogo={false} compact />
 
 			{mode === 'preset' ? (
-				<Box flexDirection="column">
-					<Box marginBottom={1}>
-						<Text color="gray">Select a date option:</Text>
-					</Box>
-					<SelectInput
-						items={DATE_PRESETS.map(p => ({label: p.label, value: p.value}))}
-						onSelect={handlePresetSelect}
-					/>
-				</Box>
-			) : (
-				<Box flexDirection="column">
-					<Box marginBottom={1}>
-						<Text color="gray">Enter date (YYYY-MM-DD):</Text>
-					</Box>
-					<Box>
-						<TextInput
-							value={customDate}
-							onChange={setCustomDate}
-							placeholder="2024-12-20"
+				<Frame title="SELECT DATE" width={50}>
+					<Box flexDirection="column" paddingY={1}>
+						<Box marginBottom={1}>
+							<Text color={colors.muted}>
+								{symbols.prompt} Select a date option:
+							</Text>
+						</Box>
+						<SelectInput
+							items={DATE_PRESETS.map(p => ({label: p.label, value: p.value}))}
+							onSelect={handlePresetSelect}
 						/>
 					</Box>
-					<Box marginTop={1}>
-						<Text color="gray">Press Enter to search, Esc to go back</Text>
+				</Frame>
+			) : (
+				<Frame title="CUSTOM DATE" width={50}>
+					<Box flexDirection="column" paddingY={1}>
+						<Box marginBottom={1}>
+							<Text color={colors.foreground}>
+								{symbols.prompt} Enter date (YYYY-MM-DD):
+							</Text>
+						</Box>
+						<Box marginLeft={2}>
+							<TextInput
+								value={customDate}
+								onChange={setCustomDate}
+								placeholder="2024-12-20"
+							/>
+						</Box>
+						<Box marginTop={1}>
+							<Text color={colors.muted}>
+								Press ENTER to search, ESC to go back
+							</Text>
+						</Box>
 					</Box>
-				</Box>
+				</Frame>
 			)}
 
 			<Footer
-				hints={mode === 'custom' ? [{key: 'Enter', action: 'Search'}] : []}
+				hints={mode === 'custom' ? [{key: 'ENTER', action: 'Search'}] : []}
 			/>
 		</Box>
 	);

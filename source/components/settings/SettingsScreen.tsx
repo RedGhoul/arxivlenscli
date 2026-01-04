@@ -2,12 +2,14 @@ import React, {useState, useEffect} from 'react';
 import {Box, Text, useInput} from 'ink';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
+import {Frame} from '../common/Frame.js';
 import {
 	getSettings,
 	updateSetting,
 	resetSettings,
 	type Settings,
 } from '../../config/settings.js';
+import {colors, symbols, separators} from '../../theme/index.js';
 
 type SettingKey = keyof Settings;
 
@@ -62,6 +64,7 @@ const SETTINGS_OPTIONS: SettingOption[] = [
 			{label: 'Default', value: 'default'},
 			{label: 'Monochrome', value: 'monochrome'},
 			{label: 'High Contrast', value: 'high-contrast'},
+			{label: 'Mr. Robot', value: 'mr-robot'},
 		],
 	},
 ];
@@ -146,7 +149,9 @@ export function SettingsScreen() {
 
 		if (option.type === 'toggle') {
 			return (
-				<Text color={value ? 'green' : 'gray'}>{value ? '[x]' : '[ ]'}</Text>
+				<Text color={value ? colors.success : colors.muted}>
+					[{value ? symbols.checkmark : ' '}]
+				</Text>
 			);
 		}
 
@@ -154,9 +159,9 @@ export function SettingsScreen() {
 			const selected = option.options.find(o => o.value === value);
 			return (
 				<Text>
-					<Text color="gray">&lt; </Text>
-					<Text color="cyan">{selected?.label ?? String(value)}</Text>
-					<Text color="gray"> &gt;</Text>
+					<Text color={colors.muted}>&lt; </Text>
+					<Text color={colors.primary}>{selected?.label ?? String(value)}</Text>
+					<Text color={colors.muted}> &gt;</Text>
 				</Text>
 			);
 		}
@@ -166,53 +171,71 @@ export function SettingsScreen() {
 
 	return (
 		<Box flexDirection="column">
-			<Header subtitle="Settings" />
+			<Header subtitle="Settings" showLogo={false} compact />
 
-			<Box flexDirection="column" marginY={1}>
-				<Box marginBottom={1}>
-					<Text bold color="white">
-						Display
-					</Text>
-				</Box>
-
-				{SETTINGS_OPTIONS.slice(0, 4).map((option, index) => (
-					<Box key={option.key}>
-						<Text color={selectedIndex === index ? 'cyan' : undefined}>
-							{selectedIndex === index ? '> ' : '  '}
-							{option.label}:{' '}
+			<Frame title="CONFIGURATION" width={55}>
+				<Box flexDirection="column" paddingY={1}>
+					<Box marginBottom={1}>
+						<Text bold color={colors.heading}>
+							{symbols.arrow} Display
 						</Text>
-						{renderValue(option)}
 					</Box>
-				))}
 
-				<Box marginTop={1} marginBottom={1}>
-					<Text bold color="white">
-						Behavior
-					</Text>
-				</Box>
+					{SETTINGS_OPTIONS.slice(0, 4).map((option, index) => (
+						<Box key={option.key} paddingLeft={2}>
+							<Text
+								color={
+									selectedIndex === index ? colors.primary : colors.foreground
+								}
+							>
+								{selectedIndex === index ? symbols.arrowRight : ' '}{' '}
+								{option.label}:{' '}
+							</Text>
+							{renderValue(option)}
+						</Box>
+					))}
 
-				{SETTINGS_OPTIONS.slice(4).map((option, index) => (
-					<Box key={option.key}>
-						<Text color={selectedIndex === index + 4 ? 'cyan' : undefined}>
-							{selectedIndex === index + 4 ? '> ' : '  '}
-							{option.label}:{' '}
+					<Box marginY={1}>
+						<Text color={colors.border}>{separators.single(45)}</Text>
+					</Box>
+
+					<Box marginBottom={1}>
+						<Text bold color={colors.heading}>
+							{symbols.arrow} Behavior
 						</Text>
-						{renderValue(option)}
 					</Box>
-				))}
-			</Box>
+
+					{SETTINGS_OPTIONS.slice(4).map((option, index) => (
+						<Box key={option.key} paddingLeft={2}>
+							<Text
+								color={
+									selectedIndex === index + 4
+										? colors.primary
+										: colors.foreground
+								}
+							>
+								{selectedIndex === index + 4 ? symbols.arrowRight : ' '}{' '}
+								{option.label}:{' '}
+							</Text>
+							{renderValue(option)}
+						</Box>
+					))}
+				</Box>
+			</Frame>
 
 			{message && (
 				<Box marginY={1}>
-					<Text color="green">{message}</Text>
+					<Text color={colors.success}>
+						{symbols.checkmark} {message}
+					</Text>
 				</Box>
 			)}
 
 			<Footer
 				hints={[
-					{key: 'Enter', action: 'Toggle/Select'},
+					{key: 'ENTER', action: 'Toggle/Select'},
 					{key: '\u2190/\u2192', action: 'Cycle'},
-					{key: 'r', action: 'Reset'},
+					{key: 'R', action: 'Reset'},
 				]}
 			/>
 		</Box>

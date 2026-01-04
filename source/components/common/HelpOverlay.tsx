@@ -1,5 +1,6 @@
 import React from 'react';
 import {Box, Text, useInput} from 'ink';
+import {colors, borders, separators} from '../../theme/index.js';
 
 interface HelpOverlayProps {
 	onClose: () => void;
@@ -7,33 +8,33 @@ interface HelpOverlayProps {
 
 const SHORTCUTS = {
 	global: [
-		{key: 'Esc', action: 'Go back'},
-		{key: 'q', action: 'Quit app'},
+		{key: 'ESC', action: 'Go back'},
+		{key: 'Q', action: 'Quit app'},
 		{key: '?', action: 'Show/hide help'},
 	],
 	navigation: [
 		{key: '\u2191/\u2193', action: 'Move selection'},
-		{key: 'Enter', action: 'Select/Confirm'},
-		{key: 'n/p', action: 'Next/Prev page'},
+		{key: 'ENTER', action: 'Select/Confirm'},
+		{key: 'N/P', action: 'Next/Prev page'},
 	],
 	paperView: [
-		{key: 'o', action: 'Open arXiv'},
-		{key: 'p', action: 'Open PDF (browser)'},
-		{key: 'v', action: 'View PDF (terminal)'},
-		{key: 'a', action: 'View authors'},
-		{key: 'k', action: 'Key findings'},
-		{key: 's', action: 'Similar papers'},
-		{key: 'm', action: 'Toggle abstract'},
+		{key: 'O', action: 'Open arXiv'},
+		{key: 'P', action: 'Open PDF (browser)'},
+		{key: 'V', action: 'View PDF (terminal)'},
+		{key: 'A', action: 'View authors'},
+		{key: 'K', action: 'Key findings'},
+		{key: 'S', action: 'Similar papers'},
+		{key: 'M', action: 'Toggle abstract'},
 	],
 	pdfViewer: [
-		{key: 'n/p', action: 'Next/Prev page'},
+		{key: 'N/P', action: 'Next/Prev page'},
 		{key: '\u2191/\u2193', action: 'Scroll up/down'},
-		{key: 'j/k', action: 'Scroll 5 lines'},
-		{key: 'i', action: 'Toggle image mode'},
+		{key: 'J/K', action: 'Scroll 5 lines'},
+		{key: 'I', action: 'Toggle image mode'},
 	],
 	search: [
-		{key: 'Tab', action: 'Next field'},
-		{key: 'Enter', action: 'Execute search'},
+		{key: 'TAB', action: 'Next field'},
+		{key: 'ENTER', action: 'Execute search'},
 	],
 };
 
@@ -44,52 +45,69 @@ export function HelpOverlay({onClose}: HelpOverlayProps) {
 		}
 	});
 
+	const border = borders.double;
+
 	const renderSection = (
 		title: string,
 		shortcuts: Array<{key: string; action: string}>,
 	) => (
 		<Box flexDirection="column" marginBottom={1}>
-			<Text bold color="white">
+			<Text bold color={colors.heading}>
 				{title}
 			</Text>
+			<Text color={colors.border}>{separators.single(20)}</Text>
 			{shortcuts.map(s => (
 				<Box key={s.key}>
 					<Box width={12}>
-						<Text color="yellow">{s.key}</Text>
+						<Text color={colors.primary}>[{s.key}]</Text>
 					</Box>
-					<Text color="gray">{s.action}</Text>
+					<Text color={colors.foreground}>{s.action}</Text>
 				</Box>
 			))}
 		</Box>
 	);
 
 	return (
-		<Box
-			flexDirection="column"
-			borderStyle="double"
-			borderColor="cyan"
-			paddingX={2}
-			paddingY={1}
-		>
-			<Box justifyContent="space-between" marginBottom={1}>
-				<Text bold color="cyan">
-					Keyboard Shortcuts
-				</Text>
-				<Text color="gray">[Esc/?] Close</Text>
-			</Box>
+		<Box flexDirection="column" paddingX={1}>
+			{/* Top border with title */}
+			<Text color={colors.primary}>
+				{border.topLeft}
+				{border.horizontal.repeat(5)}
+				<Text bold> KEYBOARD SHORTCUTS </Text>
+				{border.horizontal.repeat(30)}
+				{border.topRight}
+			</Text>
 
+			{/* Content */}
 			<Box>
-				<Box flexDirection="column" marginRight={4}>
-					{renderSection('Global', SHORTCUTS.global)}
-					{renderSection('Paper View', SHORTCUTS.paperView)}
-				</Box>
+				<Text color={colors.primary}>{border.vertical}</Text>
+				<Box flexDirection="column" paddingX={2} paddingY={1}>
+					<Box justifyContent="flex-end" marginBottom={1}>
+						<Text color={colors.muted}>[ESC/?] Close</Text>
+					</Box>
 
-				<Box flexDirection="column">
-					{renderSection('Navigation', SHORTCUTS.navigation)}
-					{renderSection('PDF Viewer', SHORTCUTS.pdfViewer)}
-					{renderSection('Search', SHORTCUTS.search)}
+					<Box>
+						<Box flexDirection="column" marginRight={4}>
+							{renderSection('Global', SHORTCUTS.global)}
+							{renderSection('Paper View', SHORTCUTS.paperView)}
+						</Box>
+
+						<Box flexDirection="column">
+							{renderSection('Navigation', SHORTCUTS.navigation)}
+							{renderSection('PDF Viewer', SHORTCUTS.pdfViewer)}
+							{renderSection('Search', SHORTCUTS.search)}
+						</Box>
+					</Box>
 				</Box>
+				<Text color={colors.primary}>{border.vertical}</Text>
 			</Box>
+
+			{/* Bottom border */}
+			<Text color={colors.primary}>
+				{border.bottomLeft}
+				{border.horizontal.repeat(58)}
+				{border.bottomRight}
+			</Text>
 		</Box>
 	);
 }

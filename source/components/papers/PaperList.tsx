@@ -10,6 +10,7 @@ import {useNavigation} from '../../hooks/useNavigation.js';
 import {usePaperSearch, usePapersByDate} from '../../hooks/usePapers.js';
 import {useApp} from '../../context/AppContext.js';
 import type {SearchParams} from '../../api/types.js';
+import {colors} from '../../theme/index.js';
 
 export function PaperList() {
 	const {params, navigate, goBack} = useNavigation();
@@ -70,7 +71,6 @@ export function PaperList() {
 						hasPrev: result.pagination.page > 1,
 					});
 				} else {
-					// API returned without pagination info
 					navigate('paper-list', {
 						...params,
 						page: newPage,
@@ -116,7 +116,7 @@ export function PaperList() {
 	if (loading) {
 		return (
 			<Box flexDirection="column">
-				<Header subtitle={title} />
+				<Header subtitle={title} showLogo={false} compact />
 				<Spinner message="Loading papers..." />
 			</Box>
 		);
@@ -125,7 +125,7 @@ export function PaperList() {
 	if (error) {
 		return (
 			<Box flexDirection="column">
-				<Header subtitle={title} />
+				<Header subtitle={title} showLogo={false} compact />
 				<ErrorMessage message={error} />
 				<Footer hints={[]} />
 			</Box>
@@ -134,10 +134,14 @@ export function PaperList() {
 
 	return (
 		<Box flexDirection="column">
-			<Header subtitle={`${title} (${totalCount} results)`} />
+			<Header
+				subtitle={`${title} (${totalCount} results)`}
+				showLogo={false}
+				compact
+			/>
 
 			{papersList.length === 0 ? (
-				<Text color="gray">No papers found.</Text>
+				<Text color={colors.muted}>No papers found.</Text>
 			) : (
 				<Box flexDirection="column">
 					{papersList.map((paper, index) => (
@@ -160,8 +164,8 @@ export function PaperList() {
 
 			<Footer
 				hints={[
-					{key: '↑↓', action: 'Navigate'},
-					{key: 'Enter', action: 'View'},
+					{key: '\u2191\u2193', action: 'Navigate'},
+					{key: 'ENTER', action: 'View'},
 				]}
 			/>
 		</Box>

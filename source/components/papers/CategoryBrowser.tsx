@@ -1,8 +1,9 @@
 import React, {useState, useEffect} from 'react';
-import {Box, useInput} from 'ink';
+import {Box, Text, useInput} from 'ink';
 import SelectInput from 'ink-select-input';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
+import {Frame} from '../common/Frame.js';
 import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
@@ -10,6 +11,7 @@ import {useCategories, usePaperSearch} from '../../hooks/usePapers.js';
 import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import type {CategoryGroup} from '../../api/types.js';
+import {colors, symbols} from '../../theme/index.js';
 
 type Level = 'groups' | 'categories';
 
@@ -91,7 +93,7 @@ export function CategoryBrowser() {
 	if (loadingCategories || loadingPapers) {
 		return (
 			<Box flexDirection="column">
-				<Header subtitle="Loading..." />
+				<Header subtitle="Loading..." showLogo={false} compact />
 				<Spinner
 					message={
 						loadingCategories ? 'Loading categories...' : 'Loading papers...'
@@ -105,7 +107,7 @@ export function CategoryBrowser() {
 	if (error) {
 		return (
 			<Box flexDirection="column">
-				<Header subtitle="Category Browser" />
+				<Header subtitle="Category Browser" showLogo={false} compact />
 				<ErrorMessage message={error} />
 				<Footer hints={[]} />
 			</Box>
@@ -120,8 +122,15 @@ export function CategoryBrowser() {
 
 		return (
 			<Box flexDirection="column">
-				<Header subtitle="Select a category group" />
-				<SelectInput items={groupItems} onSelect={handleGroupSelect} />
+				<Header subtitle="Select a category group" showLogo={false} compact />
+				<Frame title="CATEGORY GROUPS" width={55}>
+					<Box flexDirection="column" paddingY={1}>
+						<Box marginBottom={1}>
+							<Text color={colors.muted}>{symbols.prompt} Select a group:</Text>
+						</Box>
+						<SelectInput items={groupItems} onSelect={handleGroupSelect} />
+					</Box>
+				</Frame>
 				<Footer hints={[]} />
 			</Box>
 		);
@@ -135,13 +144,21 @@ export function CategoryBrowser() {
 
 		return (
 			<Box flexDirection="column">
-				<Header subtitle={`${selectedGroup.name} - Select a category`} />
-				<SelectInput
-					items={categoryItems}
-					onSelect={handleCategorySelect}
-					limit={15}
+				<Header
+					subtitle={`${selectedGroup.name} - Select a category`}
+					showLogo={false}
+					compact
 				/>
-				<Footer hints={[{key: 'Esc', action: 'Back to groups'}]} />
+				<Frame title={selectedGroup.name.toUpperCase()} width={60}>
+					<Box flexDirection="column" paddingY={1}>
+						<SelectInput
+							items={categoryItems}
+							onSelect={handleCategorySelect}
+							limit={15}
+						/>
+					</Box>
+				</Frame>
+				<Footer hints={[{key: 'ESC', action: 'Back to groups'}]} />
 			</Box>
 		);
 	}

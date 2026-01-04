@@ -4,6 +4,7 @@ import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
+import {Frame} from '../common/Frame.js';
 import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
@@ -11,6 +12,7 @@ import {usePaperSearch} from '../../hooks/usePapers.js';
 import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import {SORT_OPTIONS} from '../../utils/constants.js';
+import {colors, symbols} from '../../theme/index.js';
 
 type FocusField = 'query' | 'sort' | 'recent' | 'cited' | 'submit';
 
@@ -128,7 +130,7 @@ export function PaperSearch() {
 	if (loading) {
 		return (
 			<Box flexDirection="column">
-				<Header subtitle="Searching papers..." />
+				<Header subtitle="Searching papers..." showLogo={false} compact />
 				<Spinner message="Searching..." />
 			</Box>
 		);
@@ -136,65 +138,105 @@ export function PaperSearch() {
 
 	return (
 		<Box flexDirection="column">
-			<Header subtitle="Search for academic papers" />
+			<Header subtitle="Search for academic papers" showLogo={false} compact />
 
 			{error && <ErrorMessage message={error} />}
 
-			<Box marginBottom={1}>
-				<Text color={focusField === 'query' ? 'cyan' : 'white'}>Search: </Text>
-				<TextInput
-					value={query}
-					onChange={setQuery}
-					onSubmit={handleSearch}
-					focus={focusField === 'query'}
-					placeholder="Enter search terms..."
-				/>
-			</Box>
+			<Frame title="SEARCH PARAMETERS" width={60}>
+				<Box flexDirection="column" paddingY={1}>
+					<Box marginBottom={1}>
+						<Text
+							color={
+								focusField === 'query' ? colors.primary : colors.foreground
+							}
+						>
+							{symbols.prompt} Query:{' '}
+						</Text>
+						<TextInput
+							value={query}
+							onChange={setQuery}
+							onSubmit={handleSearch}
+							focus={focusField === 'query'}
+							placeholder="Enter search terms..."
+						/>
+					</Box>
 
-			<Box marginBottom={1}>
-				<Text color={focusField === 'sort' ? 'cyan' : 'white'}>
-					Sort by: {SORT_OPTIONS.find(s => s.value === sortBy)?.label}
-					{focusField === 'sort' && ' [Enter to change]'}
-				</Text>
-			</Box>
+					<Box marginBottom={1}>
+						<Text
+							color={focusField === 'sort' ? colors.primary : colors.foreground}
+						>
+							{symbols.prompt} Sort by:{' '}
+							<Text color={colors.secondary}>
+								{SORT_OPTIONS.find(s => s.value === sortBy)?.label}
+							</Text>
+							{focusField === 'sort' && (
+								<Text color={colors.muted}> [ENTER to change]</Text>
+							)}
+						</Text>
+					</Box>
 
-			{showSortDropdown && (
-				<Box marginLeft={2} marginBottom={1}>
-					<SelectInput
-						items={SORT_OPTIONS.map(o => ({label: o.label, value: o.value}))}
-						onSelect={item => {
-							setSortBy(item.value as typeof sortBy);
-							setShowSortDropdown(false);
-						}}
-					/>
+					{showSortDropdown && (
+						<Box marginLeft={4} marginBottom={1}>
+							<SelectInput
+								items={SORT_OPTIONS.map(o => ({
+									label: o.label,
+									value: o.value,
+								}))}
+								onSelect={item => {
+									setSortBy(item.value as typeof sortBy);
+									setShowSortDropdown(false);
+								}}
+							/>
+						</Box>
+					)}
+
+					<Box marginBottom={1}>
+						<Text
+							color={
+								focusField === 'recent' ? colors.primary : colors.foreground
+							}
+						>
+							<Text color={prioritizeRecent ? colors.success : colors.muted}>
+								[{prioritizeRecent ? symbols.checkmark : ' '}]
+							</Text>{' '}
+							Prioritize Recent
+						</Text>
+					</Box>
+
+					<Box marginBottom={1}>
+						<Text
+							color={
+								focusField === 'cited' ? colors.primary : colors.foreground
+							}
+						>
+							<Text color={prioritizeCited ? colors.success : colors.muted}>
+								[{prioritizeCited ? symbols.checkmark : ' '}]
+							</Text>{' '}
+							Prioritize Highly Cited
+						</Text>
+					</Box>
+
+					<Box>
+						<Text
+							color={
+								focusField === 'submit' ? colors.heading : colors.foreground
+							}
+							backgroundColor={
+								focusField === 'submit' ? colors.primary : undefined
+							}
+							bold={focusField === 'submit'}
+						>
+							{' '}
+							{symbols.arrow} SEARCH{' '}
+						</Text>
+					</Box>
 				</Box>
-			)}
-
-			<Box marginBottom={1}>
-				<Text color={focusField === 'recent' ? 'cyan' : 'white'}>
-					[{prioritizeRecent ? 'x' : ' '}] Prioritize Recent
-				</Text>
-			</Box>
-
-			<Box marginBottom={1}>
-				<Text color={focusField === 'cited' ? 'cyan' : 'white'}>
-					[{prioritizeCited ? 'x' : ' '}] Prioritize Highly Cited
-				</Text>
-			</Box>
-
-			<Box>
-				<Text
-					color={focusField === 'submit' ? 'black' : 'white'}
-					backgroundColor={focusField === 'submit' ? 'cyan' : undefined}
-				>
-					{' Search '}
-				</Text>
-			</Box>
+			</Frame>
 
 			<Footer
 				hints={[
-					{key: 'Tab', action: 'Next field'},
-					{key: 'Enter', action: 'Select/Submit'},
+					{key: 'TAB', action: 'Next field'},
+					{key: 'ENTER', action: 'Select/Submit'},
 				]}
 			/>
 		</Box>

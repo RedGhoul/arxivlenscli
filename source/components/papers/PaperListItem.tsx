@@ -2,6 +2,7 @@ import React from 'react';
 import {Box, Text} from 'ink';
 import type {PaperListItem as PaperListItemType} from '../../api/types.js';
 import {formatDate, formatAuthors, truncate} from '../../utils/formatting.js';
+import {colors, symbols, decorators} from '../../theme/index.js';
 
 interface PaperListItemProps {
 	paper: PaperListItemType;
@@ -18,22 +19,31 @@ export function PaperListItem({paper, isSelected, index}: PaperListItemProps) {
 			flexDirection="column"
 			paddingLeft={1}
 			borderStyle={isSelected ? 'single' : undefined}
-			borderColor={isSelected ? 'cyan' : undefined}
+			borderColor={isSelected ? colors.primary : undefined}
 		>
-			<Text>
-				<Text color={isSelected ? 'cyan' : 'white'} bold>
-					{index + 1}. {truncate(paper.title, 70)}
+			<Box>
+				<Text color={isSelected ? colors.primary : colors.muted}>
+					{isSelected ? symbols.arrowRight : ' '}
 				</Text>
-			</Text>
-			<Box paddingLeft={2}>
-				<Text color="gray">
-					{formatAuthors(paper.authors)} | {formatDate(paper.published)} |{' '}
-					{primaryCategory}
+				<Text color={colors.muted}> {decorators.index(index + 1)} </Text>
+				<Text
+					color={isSelected ? colors.heading : colors.foreground}
+					bold={isSelected}
+				>
+					{truncate(paper.title, 65)}
 				</Text>
 			</Box>
-			<Box paddingLeft={2}>
-				<Text color="gray" dimColor>
-					{truncate(paper.twoLineSummary || 'No summary available', 90)}
+			<Box paddingLeft={6}>
+				<Text color={colors.muted}>{symbols.arrowRight} </Text>
+				<Text color={colors.secondary}>{formatAuthors(paper.authors)}</Text>
+				<Text color={colors.muted}> | </Text>
+				<Text color={colors.caption}>{formatDate(paper.published)}</Text>
+				<Text color={colors.muted}> | </Text>
+				<Text color={colors.info}>{primaryCategory}</Text>
+			</Box>
+			<Box paddingLeft={6}>
+				<Text color={colors.caption} dimColor>
+					{truncate(paper.twoLineSummary || 'No summary available', 75)}
 				</Text>
 			</Box>
 		</Box>
