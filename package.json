@@ -20,6 +20,7 @@
 		"@napi-rs/canvas": "^0.1.88",
 		"@types/figlet": "^1.7.0",
 		"@types/gradient-string": "^1.1.6",
+		"ansi-escapes": "^7.2.0",
 		"axios": "^1.13.2",
 		"cli-spinners": "^3.3.0",
 		"conf": "^15.0.2",
@@ -67,6 +68,7 @@
 		"prettier": true,
 		"rules": {
 			"react/prop-types": "off",
+			"react/no-array-index-key": "off",
 			"unicorn/expiring-todo-comments": "off",
 			"unicorn/filename-case": "off",
 			"unicorn/prevent-abbreviations": "off",

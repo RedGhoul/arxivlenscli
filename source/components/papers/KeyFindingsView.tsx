@@ -133,8 +133,8 @@ export function KeyFindingsView() {
 						</Text>
 						<Box marginLeft={2} flexDirection="column">
 							{findings.keyResults?.length > 0 ? (
-								findings.keyResults.map(result => (
-									<Text key={result} wrap="wrap">
+								findings.keyResults.map((result, index) => (
+									<Text key={`result-${index}`} wrap="wrap">
 										{'\u2022'} {result}
 									</Text>
 								))
@@ -171,8 +171,8 @@ export function KeyFindingsView() {
 						</Text>
 						<Box marginLeft={2} flexDirection="column">
 							{findings.limitations?.length > 0 ? (
-								findings.limitations.map(limitation => (
-									<Text key={limitation} wrap="wrap">
+								findings.limitations.map((limitation, index) => (
+									<Text key={`limitation-${index}`} wrap="wrap">
 										{'\u2022'} {limitation}
 									</Text>
 								))
@@ -194,8 +194,8 @@ export function KeyFindingsView() {
 						</Text>
 						<Box marginLeft={2} flexDirection="column">
 							{findings.futureWork?.length > 0 ? (
-								findings.futureWork.map(work => (
-									<Text key={work} wrap="wrap">
+								findings.futureWork.map((work, index) => (
+									<Text key={`work-${index}`} wrap="wrap">
 										{'\u2022'} {work}
 									</Text>
 								))

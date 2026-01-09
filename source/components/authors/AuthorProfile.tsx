@@ -103,7 +103,7 @@ export function AuthorProfile() {
 				) : (
 					displayPapers.map((paper, index) => (
 						<Box
-							key={paper.genSlug}
+							key={paper.genSlug || paper.title || index}
 							flexDirection="column"
 							paddingLeft={1}
 							borderStyle={index === selectedIndex ? 'single' : undefined}

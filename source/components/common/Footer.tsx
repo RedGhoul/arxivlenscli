@@ -30,7 +30,7 @@ export function Footer({hints = []}: FooterProps) {
 			</Text>
 			<Box paddingLeft={1}>
 				{allHints.map((h, i) => (
-					<Text key={h.key}>
+					<Text key={`hint-${h.key}`}>
 						<Text color={colors.border}>[</Text>
 						<Text color={colors.primary}>{h.key}</Text>
 						<Text color={colors.border}>]</Text>
