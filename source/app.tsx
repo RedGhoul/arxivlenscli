@@ -22,7 +22,7 @@ function Router() {
 	const {exit} = useInkApp();
 
 	useInput((input, key) => {
-		if (input === 'Q') {
+		if (input.toLowerCase() === 'q') {
 			exit();
 		}
 
