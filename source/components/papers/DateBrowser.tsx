@@ -13,7 +13,7 @@ import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import {DATE_PRESETS} from '../../utils/constants.js';
 import {getPresetDate, getApiDateString} from '../../utils/formatting.js';
-import {colors, symbols} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 type Mode = 'preset' | 'custom';
 
@@ -21,6 +21,7 @@ export function DateBrowser() {
 	const {navigate, goBack} = useNavigation();
 	const {fetchByDate, loading, error} = usePapersByDate();
 	const {setPapersList} = useApp();
+	const {colors, symbols} = useTheme();
 	const pageSize = usePageSize();
 
 	const [mode, setMode] = useState<Mode>('preset');

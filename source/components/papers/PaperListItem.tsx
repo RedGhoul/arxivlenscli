@@ -2,7 +2,7 @@ import React from 'react';
 import {Box, Text} from 'ink';
 import type {PaperListItem as PaperListItemType} from '../../api/types.js';
 import {formatDate, formatAuthors, truncate} from '../../utils/formatting.js';
-import {colors, symbols, decorators} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 interface PaperListItemProps {
 	paper: PaperListItemType;
@@ -11,6 +11,7 @@ interface PaperListItemProps {
 }
 
 export function PaperListItem({paper, isSelected, index}: PaperListItemProps) {
+	const {colors, symbols, decorators} = useTheme();
 	const primaryCategory =
 		paper.categories?.split(' ')[0] || paper.categories || 'Unknown';
 

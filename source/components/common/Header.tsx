@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, Text} from 'ink';
-import {colors, separators, symbols, ASCII_LOGO} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 import {useTypingEffect, useBlinkingCursor} from '../../hooks/useAnimations.js';
 
 interface HeaderProps {
@@ -25,6 +25,7 @@ export function Header({
 	animated = true,
 	compact = false,
 }: HeaderProps) {
+	const {colors, separators, symbols, logo} = useTheme();
 	const {displayText, isComplete} = useTypingEffect(
 		subtitle ?? '',
 		animated && Boolean(subtitle),
@@ -35,7 +36,7 @@ export function Header({
 		<Box flexDirection="column" marginBottom={1}>
 			{showLogo && !compact && (
 				<Box flexDirection="column">
-					<Text color={colors.primary}>{ASCII_LOGO}</Text>
+					<Text color={colors.primary}>{logo}</Text>
 					<Text color={colors.border}>{separators.double(56)}</Text>
 				</Box>
 			)}
@@ -69,13 +70,14 @@ export function Header({
 	);
 }
 
-// Compact header variant for inner screens
 interface HeaderCompactProps {
 	title: string;
 	subtitle?: string;
 }
 
 export function HeaderCompact({title, subtitle}: HeaderCompactProps) {
+	const {colors} = useTheme();
+
 	return (
 		<Box flexDirection="column" marginBottom={1}>
 			<Box>

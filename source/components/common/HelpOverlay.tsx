@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, Text, useInput} from 'ink';
-import {colors, borders, separators} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 interface HelpOverlayProps {
 	onClose: () => void;
@@ -39,6 +39,7 @@ const SHORTCUTS = {
 };
 
 export function HelpOverlay({onClose}: HelpOverlayProps) {
+	const {colors, borders, separators} = useTheme();
 	useInput((input, key) => {
 		if (key.escape || input === '?') {
 			onClose();
@@ -69,7 +70,6 @@ export function HelpOverlay({onClose}: HelpOverlayProps) {
 
 	return (
 		<Box flexDirection="column" paddingX={1}>
-			{/* Top border with title */}
 			<Text color={colors.primary}>
 				{border.topLeft}
 				{border.horizontal.repeat(5)}
@@ -78,7 +78,6 @@ export function HelpOverlay({onClose}: HelpOverlayProps) {
 				{border.topRight}
 			</Text>
 
-			{/* Content */}
 			<Box>
 				<Text color={colors.primary}>{border.vertical}</Text>
 				<Box flexDirection="column" paddingX={2} paddingY={1}>
@@ -102,7 +101,6 @@ export function HelpOverlay({onClose}: HelpOverlayProps) {
 				<Text color={colors.primary}>{border.vertical}</Text>
 			</Box>
 
-			{/* Bottom border */}
 			<Text color={colors.primary}>
 				{border.bottomLeft}
 				{border.horizontal.repeat(58)}

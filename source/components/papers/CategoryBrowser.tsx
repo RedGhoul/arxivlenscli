@@ -11,7 +11,7 @@ import {useCategories, usePaperSearch} from '../../hooks/usePapers.js';
 import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import type {CategoryGroup} from '../../api/types.js';
-import {colors, symbols} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 type Level = 'groups' | 'categories';
 
@@ -25,6 +25,7 @@ export function CategoryBrowser() {
 	} = useCategories();
 	const {search, loading: loadingPapers, error: searchError} = usePaperSearch();
 	const {setPapersList, setLastSearchParams} = useApp();
+	const {colors, symbols} = useTheme();
 	const pageSize = usePageSize();
 
 	const [level, setLevel] = useState<Level>('groups');

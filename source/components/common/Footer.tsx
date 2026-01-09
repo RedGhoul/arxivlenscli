@@ -1,18 +1,18 @@
 import React from 'react';
 import {Box, Text} from 'ink';
-import {colors, borders} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 interface FooterProps {
 	hints?: Array<{key: string; action: string}>;
 }
 
 export function Footer({hints = []}: FooterProps) {
+	const {colors, borders} = useTheme();
 	const defaultHints = [
 		{key: 'ESC', action: 'Back'},
 		{key: 'Q', action: 'Quit'},
 	];
 
-	// Filter out default hints that are overridden by custom hints
 	const customKeys = new Set(hints.map(h => h.key.toUpperCase()));
 	const filteredDefaults = defaultHints.filter(
 		h => !customKeys.has(h.key.toUpperCase()),

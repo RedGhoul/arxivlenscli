@@ -10,12 +10,13 @@ import {useNavigation} from '../../hooks/useNavigation.js';
 import {usePaperSearch} from '../../hooks/usePapers.js';
 import {useApp} from '../../context/AppContext.js';
 import type {SearchParams} from '../../api/types.js';
-import {colors} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 export function PaperList() {
 	const {params, navigate, goBack} = useNavigation();
 	const {papersList, setPapersList, setSelectedPaper} = useApp();
 	const {search, loading: searchLoading, error: searchError} = usePaperSearch();
+	const {colors} = useTheme();
 	const loading = searchLoading;
 	const error = searchError;
 

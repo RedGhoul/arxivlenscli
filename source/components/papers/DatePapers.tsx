@@ -9,12 +9,13 @@ import {PaperListItem} from './PaperListItem.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
 import {usePapersByDate} from '../../hooks/usePapers.js';
 import {useApp} from '../../context/AppContext.js';
-import {colors} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 export function DatePapers() {
 	const {params, navigate, goBack} = useNavigation();
 	const {setSelectedPaper} = useApp();
 	const {fetchByDate, loading, error} = usePapersByDate();
+	const {colors} = useTheme();
 
 	const [papers, setPapers] = useState<unknown[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState(0);

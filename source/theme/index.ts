@@ -7,7 +7,13 @@ import {
 	ASCII_LOGO_COMPACT,
 } from './typography.js';
 
-export {colors, type ColorKey} from './colors.js';
+export {
+	colors,
+	colorSchemes,
+	type ColorKey,
+	type ColorPalette,
+	type ColorScheme,
+} from './colors.js';
 export {borders, separators, symbols, type BorderStyle} from './borders.js';
 export {
 	fonts,
@@ -15,6 +21,7 @@ export {
 	ASCII_LOGO,
 	ASCII_LOGO_COMPACT,
 } from './typography.js';
+export {useTheme} from './useTheme.js';
 
 // Animation timing constants
 export const timing = {

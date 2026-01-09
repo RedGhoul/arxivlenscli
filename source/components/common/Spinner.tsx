@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, Text} from 'ink';
-import {colors} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 import {useSpinner} from '../../hooks/useAnimations.js';
 
 type SpinnerType = 'dots' | 'line' | 'blocks' | 'scanning';
@@ -14,6 +14,7 @@ export function Spinner({
 	message = 'Loading...',
 	type = 'scanning',
 }: SpinnerProps) {
+	const {colors} = useTheme();
 	const spinnerChar = useSpinner(type);
 
 	return (
@@ -24,9 +25,8 @@ export function Spinner({
 	);
 }
 
-// Progress bar component
 interface ProgressBarProps {
-	progress: number; // 0-100
+	progress: number;
 	width?: number;
 	showPercentage?: boolean;
 	label?: string;
@@ -38,6 +38,7 @@ export function ProgressBar({
 	showPercentage = true,
 	label,
 }: ProgressBarProps) {
+	const {colors} = useTheme();
 	const clampedProgress = Math.max(0, Math.min(100, progress));
 	const filled = Math.floor((clampedProgress / 100) * width);
 	const empty = width - filled;
@@ -56,19 +57,19 @@ export function ProgressBar({
 	);
 }
 
-// Status indicator with different states
 interface StatusIndicatorProps {
 	status: 'success' | 'warning' | 'error' | 'info' | 'loading';
 	message: string;
 }
 
 export function StatusIndicator({status, message}: StatusIndicatorProps) {
+	const {colors} = useTheme();
 	const statusConfig = {
-		success: {color: colors.success, symbol: '\u2713'}, // ✓
-		warning: {color: colors.warning, symbol: '\u26A0'}, // ⚠
-		error: {color: colors.error, symbol: '\u2717'}, // ✗
-		info: {color: colors.info, symbol: '\u2139'}, // ℹ
-		loading: {color: colors.primary, symbol: '\u25CF'}, // ●
+		success: {color: colors.success, symbol: '\u2713'},
+		warning: {color: colors.warning, symbol: '\u26A0'},
+		error: {color: colors.error, symbol: '\u2717'},
+		info: {color: colors.info, symbol: '\u2139'},
+		loading: {color: colors.primary, symbol: '\u25CF'},
 	};
 
 	const config = statusConfig[status];

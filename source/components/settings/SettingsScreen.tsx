@@ -3,13 +3,9 @@ import {Box, Text, useInput} from 'ink';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
 import {Frame} from '../common/Frame.js';
-import {
-	getSettings,
-	updateSetting,
-	resetSettings,
-	type Settings,
-} from '../../config/settings.js';
-import {colors, symbols, separators} from '../../theme/index.js';
+import {resetSettings, type Settings} from '../../config/settings.js';
+import {useApp} from '../../context/AppContext.js';
+import {useTheme} from '../../theme/index.js';
 
 type SettingKey = keyof Settings;
 
@@ -70,7 +66,8 @@ const SETTINGS_OPTIONS: SettingOption[] = [
 ];
 
 export function SettingsScreen() {
-	const [settings, setSettings] = useState<Settings>(getSettings);
+	const {colors, symbols, separators} = useTheme();
+	const {settings, updateSettings} = useApp();
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [message, setMessage] = useState<string | null>(null);
 
@@ -90,33 +87,40 @@ export function SettingsScreen() {
 	const currentOption = SETTINGS_OPTIONS[selectedIndex]!;
 
 	const handleToggle = () => {
-		const option = currentOption;
-		if (option.type === 'toggle') {
-			const newValue = !settings[option.key];
-			updateSetting(option.key, newValue as Settings[typeof option.key]);
-			setSettings({...settings, [option.key]: newValue});
+		if (currentOption.type === 'toggle') {
+			const newValue = !settings[currentOption.key];
+			updateSettings({
+				[currentOption.key]: newValue as Settings[typeof currentOption.key],
+			});
 		}
 	};
 
 	const handleCycleSelect = (direction: 1 | -1) => {
-		const option = currentOption;
-		if (option.type === 'select' && option.options) {
-			const currentValue = settings[option.key];
-			const currentIndex = option.options.findIndex(
+		if (currentOption.type === 'select' && currentOption.options) {
+			const currentValue = settings[currentOption.key];
+			const currentIndex = currentOption.options.findIndex(
 				o => o.value === currentValue,
 			);
 			const newIndex =
-				(currentIndex + direction + option.options.length) %
-				option.options.length;
-			const newValue = option.options[newIndex]!.value;
-			updateSetting(option.key, newValue as Settings[typeof option.key]);
-			setSettings({...settings, [option.key]: newValue});
+				(currentIndex + direction + currentOption.options.length) %
+				currentOption.options.length;
+			const newValue = currentOption.options[newIndex]!.value;
+			updateSettings({
+				[currentOption.key]: newValue as Settings[typeof currentOption.key],
+			});
 		}
 	};
 
 	const handleReset = () => {
 		resetSettings();
-		setSettings(getSettings());
+		updateSettings({
+			resultsPerPage: 20,
+			defaultSort: 'relevance',
+			showTwoLineSummaries: true,
+			compactMode: false,
+			autoRefreshKeyFindings: true,
+			colorScheme: 'default',
+		});
 		setMessage('Settings reset to defaults');
 	};
 

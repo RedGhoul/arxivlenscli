@@ -12,7 +12,7 @@ import {usePaperSearch} from '../../hooks/usePapers.js';
 import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import {SORT_OPTIONS} from '../../utils/constants.js';
-import {colors, symbols} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 type FocusField = 'query' | 'sort' | 'recent' | 'cited' | 'submit';
 
@@ -20,6 +20,7 @@ export function PaperSearch() {
 	const {navigate, goBack} = useNavigation();
 	const {search, loading, error} = usePaperSearch();
 	const {setLastSearchParams, setPapersList} = useApp();
+	const {colors, symbols} = useTheme();
 	const pageSize = usePageSize();
 
 	const [query, setQuery] = useState('');

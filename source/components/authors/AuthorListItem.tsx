@@ -2,7 +2,7 @@ import React from 'react';
 import {Box, Text} from 'ink';
 import type {AuthorProfile} from '../../api/types.js';
 import {truncate} from '../../utils/formatting.js';
-import {colors, symbols, decorators} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 interface AuthorListItemProps {
 	author: AuthorProfile;
@@ -15,6 +15,7 @@ export function AuthorListItem({
 	isSelected,
 	index,
 }: AuthorListItemProps) {
+	const {colors, symbols, decorators} = useTheme();
 	const recentPaper = author.papers?.[0];
 	const recentTitle = recentPaper?.title || author.paperTitles?.[0];
 

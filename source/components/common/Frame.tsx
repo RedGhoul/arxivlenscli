@@ -1,6 +1,6 @@
 import React, {type ReactNode} from 'react';
 import {Box, Text} from 'ink';
-import {borders, colors, type BorderStyle} from '../../theme/index.js';
+import {useTheme, type BorderStyle} from '../../theme/index.js';
 
 interface FrameProps {
 	children: ReactNode;
@@ -18,9 +18,12 @@ export function Frame({
 	variant = 'single',
 	width = 50,
 	padding = 1,
-	color = colors.border,
-	titleColor = colors.primary,
+	color,
+	titleColor,
 }: FrameProps) {
+	const {colors, borders} = useTheme();
+	const frameColor = color ?? colors.border;
+	const frameTitleColor = titleColor ?? colors.primary;
 	const border = borders[variant];
 	const innerWidth = width - 2; // Account for side borders
 
@@ -33,23 +36,23 @@ export function Frame({
 
 			return (
 				<Text>
-					<Text color={color}>{border.topLeft}</Text>
-					<Text color={color}>
+					<Text color={frameColor}>{border.topLeft}</Text>
+					<Text color={frameColor}>
 						{border.horizontal.repeat(Math.max(0, leftPad))}
 					</Text>
-					<Text color={titleColor} bold>
+					<Text color={frameTitleColor} bold>
 						{titleDisplay}
 					</Text>
-					<Text color={color}>
+					<Text color={frameColor}>
 						{border.horizontal.repeat(Math.max(0, rightPad))}
 					</Text>
-					<Text color={color}>{border.topRight}</Text>
+					<Text color={frameColor}>{border.topRight}</Text>
 				</Text>
 			);
 		}
 
 		return (
-			<Text color={color}>
+			<Text color={frameColor}>
 				{border.topLeft}
 				{border.horizontal.repeat(innerWidth)}
 				{border.topRight}
@@ -61,13 +64,13 @@ export function Frame({
 		<Box flexDirection="column">
 			{renderTopBorder()}
 			<Box>
-				<Text color={color}>{border.vertical}</Text>
+				<Text color={frameColor}>{border.vertical}</Text>
 				<Box paddingX={padding} flexGrow={1}>
 					{children}
 				</Box>
-				<Text color={color}>{border.vertical}</Text>
+				<Text color={frameColor}>{border.vertical}</Text>
 			</Box>
-			<Text color={color}>
+			<Text color={frameColor}>
 				{border.bottomLeft}
 				{border.horizontal.repeat(innerWidth)}
 				{border.bottomRight}
@@ -76,7 +79,6 @@ export function Frame({
 	);
 }
 
-// Simpler horizontal separator line
 interface SeparatorProps {
 	width?: number;
 	variant?: 'single' | 'double' | 'heavy' | 'dots' | 'dashes';
@@ -86,8 +88,10 @@ interface SeparatorProps {
 export function Separator({
 	width = 50,
 	variant = 'single',
-	color = colors.border,
+	color,
 }: SeparatorProps) {
+	const {colors} = useTheme();
+	const separatorColor = color ?? colors.border;
 	const chars: Record<string, string> = {
 		single: '\u2500',
 		double: '\u2550',
@@ -96,5 +100,5 @@ export function Separator({
 		dashes: '\u2508',
 	};
 
-	return <Text color={color}>{chars[variant]?.repeat(width)}</Text>;
+	return <Text color={separatorColor}>{chars[variant]?.repeat(width)}</Text>;
 }
