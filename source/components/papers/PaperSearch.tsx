@@ -48,7 +48,7 @@ export function PaperSearch() {
 		if (result) {
 			setLastSearchParams(params);
 			setPapersList(result.papers);
-			navigate('paper-list', {
+			navigate('search-results', {
 				title: `Search: "${query.trim()}"`,
 				source: 'search',
 				searchParams: params,

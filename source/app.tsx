@@ -3,6 +3,8 @@ import {useInput, useApp as useInkApp} from 'ink';
 import {AppProvider, useApp} from './context/AppContext.js';
 import {MainMenu} from './components/menu/MainMenu.js';
 import {PaperSearch} from './components/papers/PaperSearch.js';
+import {SearchResults} from './components/papers/SearchResults.js';
+import {DatePapers} from './components/papers/DatePapers.js';
 import {PaperList} from './components/papers/PaperList.js';
 import {PaperDetail} from './components/papers/PaperDetail.js';
 import {KeyFindingsView} from './components/papers/KeyFindingsView.js';
@@ -47,6 +49,14 @@ function Router() {
 
 		case 'paper-search': {
 			return <PaperSearch />;
+		}
+
+		case 'search-results': {
+			return <SearchResults />;
+		}
+
+		case 'date-papers': {
+			return <DatePapers />;
 		}
 
 		case 'paper-list': {

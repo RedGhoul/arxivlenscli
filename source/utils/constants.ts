@@ -19,6 +19,8 @@ export const DATE_PRESETS = [
 export type Route =
 	| 'main-menu'
 	| 'paper-search'
+	| 'search-results'
+	| 'date-papers'
 	| 'paper-list'
 	| 'paper-detail'
 	| 'key-findings'

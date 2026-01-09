@@ -12,35 +12,45 @@ import {useApp} from '../../context/AppContext.js';
 import type {SearchParams} from '../../api/types.js';
 import {colors} from '../../theme/index.js';
 
-export function PaperList() {
+export function SearchResults() {
 	const {params, navigate, goBack} = useNavigation();
-	const {papersList, setPapersList, setSelectedPaper} = useApp();
-	const {search, loading: searchLoading, error: searchError} = usePaperSearch();
-	const loading = searchLoading;
-	const error = searchError;
+	const {setSelectedPaper} = useApp();
+	const {search, loading, error} = usePaperSearch();
 
+	const [papers, setPapers] = useState<unknown[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
 	const title = (params['title'] as string) || 'Papers';
-	const source = params['source'] as 'search' | 'date' | 'category';
+	const searchParams = params['searchParams'] as SearchParams;
 	const page = (params['page'] as number) || 1;
 	const totalPages = (params['totalPages'] as number) || 1;
 	const hasNext = (params['hasNext'] as boolean) || false;
 	const hasPrev = (params['hasPrev'] as boolean) || false;
 	const totalCount = (params['totalCount'] as number) || 0;
-	const pageSize = (params['pageSize'] as number) || 20;
 
 	useEffect(() => {
 		setSelectedIndex(0);
 	}, [page]);
 
+	useEffect(() => {
+		async function fetchResults() {
+			if (searchParams) {
+				const result = await search({...searchParams, page});
+				if (result) {
+					setPapers(result.papers || []);
+				}
+			}
+		}
+
+		fetchResults();
+	}, [page, searchParams, search]);
+
 	const handlePageChange = async (newPage: number) => {
-		if (source === 'search' && params['searchParams']) {
-			const searchParams = params['searchParams'] as SearchParams;
+		if (searchParams) {
 			const result = await search({...searchParams, page: newPage});
 			if (result) {
-				setPapersList(result.papers || []);
-				navigate('paper-list', {
+				setPapers(result.papers || []);
+				navigate('search-results', {
 					...params,
 					page: result.page,
 					totalPages: result.totalPages,
@@ -48,13 +58,6 @@ export function PaperList() {
 					hasPrev: result.hasPreviousPage,
 				});
 			}
-		} else if (source === 'date' && params['date']) {
-			navigate('paper-list', {
-				...params,
-				page: newPage,
-				hasNext: newPage * pageSize < (params['totalCount'] as number),
-				hasPrev: newPage > 1,
-			});
 		}
 	};
 
@@ -66,15 +69,14 @@ export function PaperList() {
 			return;
 		}
 
-		if (papersList.length === 0) return;
+		if (papers.length === 0) return;
 
 		if (key.upArrow) {
 			setSelectedIndex(prev => Math.max(0, prev - 1));
 		}
 
 		if (key.downArrow) {
-			const maxIndex =
-				Math.min(pageSize, papersList.length - (page - 1) * pageSize) - 1;
+			const maxIndex = papers.length - 1;
 			setSelectedIndex(prev => Math.min(maxIndex, prev + 1));
 		}
 
@@ -86,14 +88,11 @@ export function PaperList() {
 			handlePageChange(page + 1);
 		}
 
-		if (key.return) {
-			const actualIndex = (page - 1) * pageSize + selectedIndex;
-			if (papersList[actualIndex]) {
-				setSelectedPaper(papersList[actualIndex]);
-				navigate('paper-detail', {
-					paperId: papersList[actualIndex].genSlug,
-				});
-			}
+		if (key.return && papers[selectedIndex]) {
+			setSelectedPaper(papers[selectedIndex] as never);
+			navigate('paper-detail', {
+				paperId: (papers[selectedIndex] as {genSlug: string}).genSlug,
+			});
 		}
 	});
 
@@ -124,20 +123,18 @@ export function PaperList() {
 				compact
 			/>
 
-			{papersList.length === 0 ? (
+			{papers.length === 0 ? (
 				<Text color={colors.muted}>No papers found.</Text>
 			) : (
 				<Box flexDirection="column">
-					{papersList
-						.slice((page - 1) * pageSize, page * pageSize)
-						.map((paper, index) => (
-							<PaperListItem
-								key={paper.paperId}
-								paper={paper}
-								isSelected={index === selectedIndex}
-								index={(page - 1) * pageSize + index}
-							/>
-						))}
+					{papers.map((paper, index) => (
+						<PaperListItem
+							key={(paper as {paperId: string}).paperId}
+							paper={paper as never}
+							isSelected={index === selectedIndex}
+							index={index}
+						/>
+					))}
 				</Box>
 			)}
 

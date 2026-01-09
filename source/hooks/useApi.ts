@@ -1,4 +1,4 @@
-import {useState, useCallback} from 'react';
+import {useState, useCallback, useMemo} from 'react';
 
 interface UseApiState<T> {
 	data: T | null;
@@ -40,5 +40,5 @@ export function useApi<T, P extends unknown[] = []>(
 		setState({data: null, loading: false, error: null});
 	}, []);
 
-	return {...state, execute, reset};
+	return useMemo(() => ({...state, execute, reset}), [state, execute, reset]);
 }

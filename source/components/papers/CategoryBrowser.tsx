@@ -56,7 +56,7 @@ export function CategoryBrowser() {
 		if (result) {
 			setLastSearchParams(params);
 			setPapersList(result.papers);
-			navigate('paper-list', {
+			navigate('search-results', {
 				title: `Category: ${categoryCode}`,
 				source: 'category',
 				category: categoryCode,
