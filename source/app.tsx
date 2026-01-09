@@ -1,5 +1,6 @@
 import React from 'react';
-import {useInput, useApp as useInkApp} from 'ink';
+import {useInput, useApp as useInkApp, useStdout} from 'ink';
+import ansiEscapes from 'ansi-escapes';
 import {AppProvider, useApp} from './context/AppContext.js';
 import {MainMenu} from './components/menu/MainMenu.js';
 import {PaperSearch} from './components/papers/PaperSearch.js';
@@ -20,9 +21,11 @@ import {HelpOverlay} from './components/common/HelpOverlay.js';
 function Router() {
 	const {navigation, goBack, canGoBack, showHelp, toggleHelp} = useApp();
 	const {exit} = useInkApp();
+	const {stdout} = useStdout();
 
 	useInput((input, key) => {
 		if (input.toLowerCase() === 'q') {
+			stdout.write(ansiEscapes.clearTerminal);
 			exit();
 		}
 
