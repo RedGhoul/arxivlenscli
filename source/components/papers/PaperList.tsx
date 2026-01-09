@@ -85,6 +85,7 @@ export function PaperList() {
 
 	useInput((input, key) => {
 		if (loading) return;
+		if (papersList.length === 0) return;
 
 		if (key.escape || input === 'q') {
 			goBack();

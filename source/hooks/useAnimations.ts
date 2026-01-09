@@ -135,9 +135,9 @@ export function useBootSequence(lines: string[], enabled = true) {
 		setVisibleLines([]);
 		setIsComplete(false);
 
-		const timeouts: ReturnType<typeof setTimeout>[] = [];
+		const timeouts: Array<ReturnType<typeof setTimeout>> = [];
 
-		lines.forEach((line, index) => {
+		for (const [index, line] of lines.entries()) {
 			const timeout = setTimeout(() => {
 				setVisibleLines(prev => [...prev, line]);
 				if (index === lines.length - 1) {
@@ -147,7 +147,7 @@ export function useBootSequence(lines: string[], enabled = true) {
 				}
 			}, index * timing.bootDelay);
 			timeouts.push(timeout);
-		});
+		}
 
 		return () => {
 			for (const timeout of timeouts) {

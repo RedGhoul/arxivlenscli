@@ -6,7 +6,7 @@ export interface Settings {
 	showTwoLineSummaries: boolean;
 	compactMode: boolean;
 	autoRefreshKeyFindings: boolean;
-	colorScheme: 'default' | 'monochrome' | 'high-contrast';
+	colorScheme: 'default' | 'monochrome' | 'high-contrast' | 'mr-robot';
 }
 
 const defaults: Settings = {
@@ -24,14 +24,18 @@ const config = new Conf<Settings>({
 });
 
 export function getSettings(): Settings {
-	return {
-		resultsPerPage: config.get('resultsPerPage'),
-		defaultSort: config.get('defaultSort'),
-		showTwoLineSummaries: config.get('showTwoLineSummaries'),
-		compactMode: config.get('compactMode'),
-		autoRefreshKeyFindings: config.get('autoRefreshKeyFindings'),
-		colorScheme: config.get('colorScheme'),
-	};
+	try {
+		return {
+			resultsPerPage: config.get('resultsPerPage'),
+			defaultSort: config.get('defaultSort'),
+			showTwoLineSummaries: config.get('showTwoLineSummaries'),
+			compactMode: config.get('compactMode'),
+			autoRefreshKeyFindings: config.get('autoRefreshKeyFindings'),
+			colorScheme: config.get('colorScheme'),
+		};
+	} catch {
+		return defaults;
+	}
 }
 
 export function getSetting<K extends keyof Settings>(key: K): Settings[K] {
@@ -42,17 +46,23 @@ export function updateSetting<K extends keyof Settings>(
 	key: K,
 	value: Settings[K],
 ): void {
-	config.set(key, value);
+	try {
+		config.set(key, value);
+	} catch {}
 }
 
 export function updateSettings(updates: Partial<Settings>): void {
-	for (const [key, value] of Object.entries(updates)) {
-		config.set(key as keyof Settings, value);
-	}
+	try {
+		for (const [key, value] of Object.entries(updates)) {
+			config.set(key as keyof Settings, value);
+		}
+	} catch {}
 }
 
 export function resetSettings(): void {
-	config.clear();
+	try {
+		config.clear();
+	} catch {}
 }
 
 export const settingsConfig = config;

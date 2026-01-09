@@ -12,8 +12,6 @@ export async function getKeyFindings(
 		KeyFindingsResponse | KeyFindingsStatusResponse
 	>(`/papers/${paperId}/key-findings`);
 
-	// HTTP 200 means findings are ready
-	// HTTP 202 means still generating
 	if (response.status === 200) {
 		return {
 			ready: true,
@@ -21,8 +19,20 @@ export async function getKeyFindings(
 		};
 	}
 
-	return {
-		ready: false,
-		data: response.data as KeyFindingsStatusResponse,
-	};
+	if (response.status === 202) {
+		return {
+			ready: false,
+			data: response.data as KeyFindingsStatusResponse,
+		};
+	}
+
+	const error = new Error(
+		response.data &&
+		typeof response.data === 'object' &&
+		'message' in response.data
+			? (response.data as {message: string}).message
+			: 'Failed to fetch key findings',
+	);
+	(error as any).status = response.status;
+	throw error;
 }

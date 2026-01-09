@@ -7,6 +7,11 @@ import React, {
 } from 'react';
 import type {Route} from '../utils/constants.js';
 import type {PaperListItem, SearchParams} from '../api/types.js';
+import type {Settings} from '../config/settings.js';
+import {
+	getSettings,
+	updateSettings as updateConfigSettings,
+} from '../config/settings.js';
 
 interface NavigationState {
 	route: Route;
@@ -29,6 +34,9 @@ interface AppState {
 	papersList: PaperListItem[];
 	setPapersList: (papers: PaperListItem[]) => void;
 
+	settings: Settings;
+	updateSettings: (settings: Partial<Settings>) => void;
+
 	showHelp: boolean;
 	toggleHelp: () => void;
 }
@@ -48,10 +56,19 @@ export function AppProvider({children}: {children: ReactNode}) {
 		null,
 	);
 	const [papersList, setPapersList] = useState<PaperListItem[]>([]);
+	const [settings, setSettings] = useState<Settings>(getSettings());
 	const [showHelp, setShowHelp] = useState(false);
 
 	const toggleHelp = useCallback(() => {
 		setShowHelp(prev => !prev);
+	}, []);
+
+	const updateSettings = useCallback((updates: Partial<Settings>) => {
+		setSettings(prev => {
+			const newSettings = {...prev, ...updates};
+			updateConfigSettings(newSettings);
+			return newSettings;
+		});
 	}, []);
 
 	const navigate = useCallback(
@@ -93,6 +110,8 @@ export function AppProvider({children}: {children: ReactNode}) {
 				setLastSearchParams,
 				papersList,
 				setPapersList,
+				settings,
+				updateSettings,
 				showHelp,
 				toggleHelp,
 			}}

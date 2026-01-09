@@ -14,7 +14,9 @@ function getSystemInfo() {
 	const now = new Date();
 	const date = now.toISOString().split('T')[0];
 	const time = now.toTimeString().split(' ')[0];
-	return `SYS.TIME: ${date} ${time}`;
+	const dateStr = date ?? '';
+	const timeStr = time ?? '';
+	return `SYS.TIME: ${dateStr} ${timeStr}`;
 }
 
 export function Header({
@@ -90,7 +92,8 @@ export function HeaderCompact({title, subtitle}: HeaderCompactProps) {
 			</Box>
 			{subtitle && (
 				<Text color={colors.muted}>
-					{'   '}// {subtitle}
+					{'   // '}
+					{subtitle}
 				</Text>
 			)}
 		</Box>

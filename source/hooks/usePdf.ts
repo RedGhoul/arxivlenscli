@@ -99,7 +99,9 @@ export function usePdf(pdfUrl: string) {
 
 		return () => {
 			cancelled = true;
-			pdfDocRef.current?.destroy();
+			try {
+				pdfDocRef.current?.destroy();
+			} catch {}
 		};
 	}, [pdfUrl]);
 

@@ -16,7 +16,7 @@ import {SettingsScreen} from './components/settings/SettingsScreen.js';
 import {HelpOverlay} from './components/common/HelpOverlay.js';
 
 function Router() {
-	const {navigation, goBack, showHelp, toggleHelp} = useApp();
+	const {navigation, goBack, canGoBack, showHelp, toggleHelp} = useApp();
 	const {exit} = useInkApp();
 
 	useInput((input, key) => {
@@ -29,7 +29,7 @@ function Router() {
 			return;
 		}
 
-		if (key.escape && navigation.route !== 'main-menu') {
+		if (key.escape && canGoBack) {
 			goBack();
 		}
 	});

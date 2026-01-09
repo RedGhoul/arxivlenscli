@@ -7,7 +7,7 @@ export function useKeyFindings() {
 
 	const fetchKeyFindings = useCallback(
 		(paperId: string) => api.execute(paperId),
-		[api.execute],
+		[api],
 	);
 
 	return {

@@ -40,11 +40,15 @@ export function PaperDetail() {
 
 		if (paper) {
 			if (input === 'o') {
-				await open(paper.arxivLink);
+				try {
+					await open(paper.arxivLink);
+				} catch {}
 			}
 
 			if (input === 'p') {
-				await open(paper.pdfLink);
+				try {
+					await open(paper.pdfLink);
+				} catch {}
 			}
 
 			if (input === 'a') {
