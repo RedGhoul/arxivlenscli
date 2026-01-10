@@ -1,5 +1,12 @@
 import Conf from 'conf';
 
+export interface DownloadRecord {
+	paperId: string;
+	title: string;
+	downloadedAt: string;
+	filePath: string;
+}
+
 export interface Settings {
 	resultsPerPage: number;
 	defaultSort: 'relevance' | 'date' | 'citations';
@@ -7,6 +14,10 @@ export interface Settings {
 	compactMode: boolean;
 	autoRefreshKeyFindings: boolean;
 	colorScheme: 'default' | 'monochrome' | 'high-contrast' | 'mr-robot';
+	downloadPath: string | null;
+	maxConcurrentDownloads: number;
+	fileNameFormat: 'title+id' | 'id-only';
+	downloadHistory: DownloadRecord[];
 }
 
 const defaults: Settings = {
@@ -16,6 +27,10 @@ const defaults: Settings = {
 	compactMode: false,
 	autoRefreshKeyFindings: true,
 	colorScheme: 'default',
+	downloadPath: null,
+	maxConcurrentDownloads: 3,
+	fileNameFormat: 'title+id',
+	downloadHistory: [],
 };
 
 const config = new Conf<Settings>({
@@ -32,6 +47,10 @@ export function getSettings(): Settings {
 			compactMode: config.get('compactMode'),
 			autoRefreshKeyFindings: config.get('autoRefreshKeyFindings'),
 			colorScheme: config.get('colorScheme'),
+			downloadPath: config.get('downloadPath'),
+			maxConcurrentDownloads: config.get('maxConcurrentDownloads'),
+			fileNameFormat: config.get('fileNameFormat'),
+			downloadHistory: config.get('downloadHistory'),
 		};
 	} catch {
 		return defaults;

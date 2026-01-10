@@ -11,6 +11,7 @@ import {usePaperSearch} from '../../hooks/usePapers.js';
 import {useApp} from '../../context/AppContext.js';
 import type {SearchParams} from '../../api/types.js';
 import {useTheme} from '../../theme/index.js';
+import type {Route} from '../../utils/constants.js';
 
 export function PaperList() {
 	const {params, navigate, goBack} = useNavigation();
@@ -21,6 +22,9 @@ export function PaperList() {
 	const error = searchError;
 
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [selectedForDownload, setSelectedForDownload] = useState<Set<string>>(
+		new Set(),
+	);
 
 	const title = (params['title'] as string) || 'Papers';
 	const source = params['source'] as 'search' | 'date' | 'category';
@@ -33,6 +37,7 @@ export function PaperList() {
 
 	useEffect(() => {
 		setSelectedIndex(0);
+		setSelectedForDownload(new Set());
 	}, [page]);
 
 	const handlePageChange = async (newPage: number) => {
@@ -79,14 +84,6 @@ export function PaperList() {
 			setSelectedIndex(prev => Math.min(maxIndex, prev + 1));
 		}
 
-		if ((input === 'p' || key.leftArrow) && hasPrev) {
-			handlePageChange(page - 1);
-		}
-
-		if ((input === 'n' || key.rightArrow) && hasNext) {
-			handlePageChange(page + 1);
-		}
-
 		if (key.return) {
 			const actualIndex = (page - 1) * pageSize + selectedIndex;
 			if (papersList[actualIndex]) {
@@ -95,6 +92,40 @@ export function PaperList() {
 					paperId: papersList[actualIndex].genSlug,
 				});
 			}
+		}
+
+		if (input === ' ') {
+			const actualIndex = (page - 1) * pageSize + selectedIndex;
+			const paper = papersList[actualIndex];
+			if (paper) {
+				setSelectedForDownload(prev => {
+					const newSet = new Set(prev);
+					if (newSet.has(paper.paperId)) {
+						newSet.delete(paper.paperId);
+					} else {
+						newSet.add(paper.paperId);
+					}
+					// eslint-disable-next-line @typescript-eslint/padding-line-between-statements
+					return newSet;
+				});
+			}
+		}
+
+		if (input === 'd' && selectedForDownload.size > 0) {
+			const selectedPapers = papersList.filter(paper =>
+				selectedForDownload.has(paper.paperId),
+			);
+			navigate('download-manager' as Route, {
+				papers: selectedPapers,
+			});
+		}
+
+		if ((input === 'p' || key.leftArrow) && hasPrev) {
+			handlePageChange(page - 1);
+		}
+
+		if ((input === 'n' || key.rightArrow) && hasNext) {
+			handlePageChange(page + 1);
 		}
 	});
 
@@ -137,6 +168,7 @@ export function PaperList() {
 								paper={paper}
 								isSelected={index === selectedIndex}
 								index={(page - 1) * pageSize + index}
+								isSelectedForDownload={selectedForDownload.has(paper.paperId)}
 							/>
 						))}
 				</Box>

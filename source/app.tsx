@@ -15,6 +15,7 @@ import {CategoryBrowser} from './components/papers/CategoryBrowser.js';
 import {AuthorSearch} from './components/authors/AuthorSearch.js';
 import {AuthorList} from './components/authors/AuthorList.js';
 import {AuthorProfile} from './components/authors/AuthorProfile.js';
+import {DownloadManager} from './components/downloads/DownloadManager.js';
 import {SettingsScreen} from './components/settings/SettingsScreen.js';
 import {HelpOverlay} from './components/common/HelpOverlay.js';
 
@@ -96,6 +97,10 @@ function Router() {
 
 		case 'author-profile': {
 			return <AuthorProfile />;
+		}
+
+		case 'download-manager': {
+			return <DownloadManager />;
 		}
 
 		case 'settings': {

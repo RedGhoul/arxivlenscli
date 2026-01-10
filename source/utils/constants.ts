@@ -30,6 +30,7 @@ export type Route =
 	| 'author-search'
 	| 'author-list'
 	| 'author-profile'
+	| 'download-manager'
 	| 'settings';
 
 export const MENU_ITEMS = [
@@ -37,6 +38,7 @@ export const MENU_ITEMS = [
 	{label: 'Browse by Date', value: 'date-browser' as Route},
 	{label: 'Browse Categories', value: 'category-browser' as Route},
 	{label: 'Search Authors', value: 'author-search' as Route},
+	{label: 'Download Manager', value: 'download-manager' as Route},
 	{label: 'Settings', value: 'settings' as Route},
 	{label: 'Exit', value: 'exit' as const},
 ] as const;

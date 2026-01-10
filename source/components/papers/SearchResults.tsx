@@ -20,6 +20,9 @@ export function SearchResults() {
 
 	const [papers, setPapers] = useState<unknown[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [selectedForDownload, setSelectedForDownload] = useState<Set<string>>(
+		new Set(),
+	);
 
 	const title = (params['title'] as string) || 'Papers';
 	const searchParams = params['searchParams'] as SearchParams;
@@ -31,6 +34,7 @@ export function SearchResults() {
 
 	useEffect(() => {
 		setSelectedIndex(0);
+		setSelectedForDownload(new Set());
 	}, [page]);
 
 	useEffect(() => {
@@ -81,19 +85,42 @@ export function SearchResults() {
 			setSelectedIndex(prev => Math.min(maxIndex, prev + 1));
 		}
 
+		if (key.return && papers[selectedIndex]) {
+			setSelectedPaper(papers[selectedIndex] as never);
+			navigate('paper-detail', {
+				paperId: (papers[selectedIndex] as {genSlug: string}).genSlug,
+			});
+		}
+
+		if (input === ' ' && papers[selectedIndex]) {
+			const {paperId} = papers[selectedIndex] as {paperId: string};
+			setSelectedForDownload(prev => {
+				const newSet = new Set(prev);
+				if (newSet.has(paperId)) {
+					newSet.delete(paperId);
+				} else {
+					newSet.add(paperId);
+				}
+				// eslint-disable-next-line @typescript-eslint/padding-line-between-statements
+				return newSet;
+			});
+		}
+
+		if (input === 'd' && selectedForDownload.size > 0) {
+			const selectedPapers = papers.filter((paper: unknown) =>
+				selectedForDownload.has((paper as {paperId: string}).paperId),
+			);
+			navigate('download-manager', {
+				papers: selectedPapers,
+			});
+		}
+
 		if ((input === 'p' || key.leftArrow) && hasPrev) {
 			handlePageChange(page - 1);
 		}
 
 		if ((input === 'n' || key.rightArrow) && hasNext) {
 			handlePageChange(page + 1);
-		}
-
-		if (key.return && papers[selectedIndex]) {
-			setSelectedPaper(papers[selectedIndex] as never);
-			navigate('paper-detail', {
-				paperId: (papers[selectedIndex] as {genSlug: string}).genSlug,
-			});
 		}
 	});
 
@@ -134,6 +161,9 @@ export function SearchResults() {
 							paper={paper as never}
 							isSelected={index === selectedIndex}
 							index={index}
+							isSelectedForDownload={selectedForDownload.has(
+								(paper as {paperId: string}).paperId,
+							)}
 						/>
 					))}
 				</Box>

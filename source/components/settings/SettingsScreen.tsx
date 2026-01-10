@@ -63,6 +63,27 @@ const SETTINGS_OPTIONS: SettingOption[] = [
 			{label: 'Mr. Robot', value: 'mr-robot'},
 		],
 	},
+	{
+		key: 'maxConcurrentDownloads',
+		label: 'Max concurrent downloads',
+		type: 'select',
+		options: [
+			{label: '1', value: 1},
+			{label: '2', value: 2},
+			{label: '3', value: 3},
+			{label: '4', value: 4},
+			{label: '5', value: 5},
+		],
+	},
+	{
+		key: 'fileNameFormat',
+		label: 'File name format',
+		type: 'select',
+		options: [
+			{label: 'Title + ID', value: 'title+id'},
+			{label: 'ID Only', value: 'id-only'},
+		],
+	},
 ];
 
 export function SettingsScreen() {
@@ -120,6 +141,8 @@ export function SettingsScreen() {
 			compactMode: false,
 			autoRefreshKeyFindings: true,
 			colorScheme: 'default',
+			maxConcurrentDownloads: 3,
+			fileNameFormat: 'title+id',
 		});
 		setMessage('Settings reset to defaults');
 	};
@@ -177,6 +200,17 @@ export function SettingsScreen() {
 		<Box flexDirection="column">
 			<Header subtitle="Settings" showLogo={false} compact />
 
+			{settings.downloadPath ? (
+				<Box paddingX={1} marginBottom={1}>
+					<Text color={colors.muted}>Download Path: </Text>
+					<Text color={colors.primary}>{settings.downloadPath}</Text>
+				</Box>
+			) : (
+				<Box paddingX={1} marginBottom={1}>
+					<Text color={colors.error}>No download path set!</Text>
+				</Box>
+			)}
+
 			<Frame title="CONFIGURATION" width={55}>
 				<Box flexDirection="column" paddingY={1}>
 					<Box marginBottom={1}>
@@ -209,7 +243,7 @@ export function SettingsScreen() {
 						</Text>
 					</Box>
 
-					{SETTINGS_OPTIONS.slice(4).map((option, index) => (
+					{SETTINGS_OPTIONS.slice(4, 6).map((option, index) => (
 						<Box key={option.key} paddingLeft={2}>
 							<Text
 								color={
@@ -219,6 +253,32 @@ export function SettingsScreen() {
 								}
 							>
 								{selectedIndex === index + 4 ? symbols.arrowRight : ' '}{' '}
+								{option.label}:{' '}
+							</Text>
+							{renderValue(option)}
+						</Box>
+					))}
+
+					<Box marginY={1}>
+						<Text color={colors.border}>{separators.single(45)}</Text>
+					</Box>
+
+					<Box marginBottom={1}>
+						<Text bold color={colors.heading}>
+							{symbols.arrow} Downloads
+						</Text>
+					</Box>
+
+					{SETTINGS_OPTIONS.slice(6).map((option, index) => (
+						<Box key={option.key} paddingLeft={2}>
+							<Text
+								color={
+									selectedIndex === index + 6
+										? colors.primary
+										: colors.foreground
+								}
+							>
+								{selectedIndex === index + 6 ? symbols.arrowRight : ' '}{' '}
 								{option.label}:{' '}
 							</Text>
 							{renderValue(option)}

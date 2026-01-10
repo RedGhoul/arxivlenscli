@@ -51,6 +51,12 @@ export function PaperDetail() {
 				} catch {}
 			}
 
+			if (input === 'd') {
+				navigate('download-manager', {
+					papers: [paper],
+				});
+			}
+
 			if (input === 'a') {
 				const firstAuthor = paper.authors?.[0];
 				if (firstAuthor) {
@@ -195,6 +201,7 @@ export function PaperDetail() {
 					<Text color="yellow">[a]</Text> View Authors{'  '}
 					<Text color="yellow">[k]</Text> Key Findings{'  '}
 					<Text color="yellow">[v]</Text> View PDF{'  '}
+					<Text color="yellow">[d]</Text> Download PDF{'  '}
 					<Text color="yellow">[o]</Text> Open arXiv{'  '}
 					<Text color="yellow">[p]</Text> Open PDF (browser)
 				</Text>
