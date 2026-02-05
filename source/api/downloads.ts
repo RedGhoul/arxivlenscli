@@ -46,8 +46,39 @@ export function getDownloadPath(
 	paper: PaperListItem,
 	settings: Settings,
 ): string {
+	validateDownloadPath(basePath);
+	validateDownloadPath(settings.downloadPath || './downloads');
+
 	const fileName = generateFileName(paper, settings);
 	return path.join(basePath, fileName);
+}
+
+export function validateDownloadPath(downloadPath: string): void {
+	if (typeof downloadPath !== 'string') {
+		throw new TypeError('Invalid download path: must be a string');
+	}
+
+	if (downloadPath.trim().length === 0) {
+		throw new TypeError('Invalid download path: cannot be empty');
+	}
+
+	const normalized = path.normalize(downloadPath);
+
+	if (normalized !== downloadPath) {
+		throw new TypeError(
+			'Invalid download path: path traversal characters detected',
+		);
+	}
+
+	const suspiciousPatterns = [/\.\.\//, /\.\.\\/, /~/, /\$/, /^[/\\]/];
+
+	for (const pattern of suspiciousPatterns) {
+		if (pattern.test(downloadPath)) {
+			throw new TypeError(
+				'Invalid download path: suspicious path patterns detected',
+			);
+		}
+	}
 }
 
 export interface DownloadProgress {

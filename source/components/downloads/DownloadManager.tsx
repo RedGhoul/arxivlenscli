@@ -20,22 +20,23 @@ export function DownloadManager() {
 	const [showPathPrompt, setShowPathPrompt] = useState(false);
 
 	const downloads = useDownloads(settings);
+	const initialPapers = papers;
 
 	useEffect(() => {
-		if (papers.length > 0 && settings.downloadPath) {
-			downloads.addToQueue(papers);
-		} else if (papers.length > 0 && !settings.downloadPath) {
+		if (initialPapers.length > 0 && settings.downloadPath) {
+			downloads.addToQueue(initialPapers);
+		} else if (initialPapers.length > 0 && !settings.downloadPath) {
 			setShowPathPrompt(true);
 		}
-	}, [papers, settings.downloadPath, downloads.addToQueue]);
+	}, [initialPapers, settings.downloadPath, downloads]);
 
 	const progress = downloads.getProgress();
 
 	const handlePathConfirm = (path: string) => {
 		updateSettings({downloadPath: path});
 		setShowPathPrompt(false);
-		if (papers.length > 0) {
-			downloads.addToQueue(papers);
+		if (initialPapers.length > 0) {
+			downloads.addToQueue(initialPapers);
 		}
 	};
 

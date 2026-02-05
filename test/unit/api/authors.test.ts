@@ -1,10 +1,5 @@
 import {apiClient} from '../../../source/api/client.js';
-import {http} from 'msw';
 import {server} from '../../helpers/mockApi.js';
-import type {
-	AuthorSearchResponse,
-	AuthorProfileResponse,
-} from '../../../source/api/types.js';
 
 describe('api/authors - searchAuthors', () => {
 	beforeAll(() => {

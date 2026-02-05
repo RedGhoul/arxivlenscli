@@ -38,6 +38,73 @@ const config = new Conf<Settings>({
 	defaults,
 });
 
+function validateSettings(settings: Partial<Settings>): void {
+	if (settings.resultsPerPage !== undefined) {
+		const validSizes = [10, 20, 50];
+		if (!validSizes.includes(settings.resultsPerPage)) {
+			throw new TypeError(
+				`Invalid resultsPerPage: ${
+					settings.resultsPerPage
+				}. Must be one of: ${validSizes.join(', ')}`,
+			);
+		}
+	}
+
+	if (settings.maxConcurrentDownloads !== undefined) {
+		if (
+			settings.maxConcurrentDownloads < 1 ||
+			settings.maxConcurrentDownloads > 5
+		) {
+			throw new TypeError(
+				`Invalid maxConcurrentDownloads: ${settings.maxConcurrentDownloads}. Must be between 1 and 5`,
+			);
+		}
+	}
+
+	if (settings.defaultSort !== undefined) {
+		const validSorts = ['relevance', 'date', 'citations'];
+		if (!validSorts.includes(settings.defaultSort)) {
+			throw new TypeError(
+				`Invalid defaultSort: ${
+					settings.defaultSort
+				}. Must be one of: ${validSorts.join(', ')}`,
+			);
+		}
+	}
+
+	if (settings.colorScheme !== undefined) {
+		const validSchemes = ['default', 'monochrome', 'high-contrast', 'mr-robot'];
+		if (!validSchemes.includes(settings.colorScheme)) {
+			throw new TypeError(
+				`Invalid colorScheme: ${
+					settings.colorScheme
+				}. Must be one of: ${validSchemes.join(', ')}`,
+			);
+		}
+	}
+
+	if (settings.fileNameFormat !== undefined) {
+		const validFormats = ['title+id', 'id-only'];
+		if (!validFormats.includes(settings.fileNameFormat)) {
+			throw new TypeError(
+				`Invalid fileNameFormat: ${
+					settings.fileNameFormat
+				}. Must be one of: ${validFormats.join(', ')}`,
+			);
+		}
+	}
+
+	if (settings.downloadPath !== undefined && settings.downloadPath !== null) {
+		if (typeof settings.downloadPath !== 'string') {
+			throw new TypeError('Invalid downloadPath: must be a string or null');
+		}
+
+		if (settings.downloadPath.trim().length === 0) {
+			throw new TypeError('Invalid downloadPath: cannot be empty string');
+		}
+	}
+}
+
 export function getSettings(): Settings {
 	try {
 		return {
@@ -72,6 +139,7 @@ export function updateSetting<K extends keyof Settings>(
 
 export function updateSettings(updates: Partial<Settings>): void {
 	try {
+		validateSettings(updates);
 		for (const [key, value] of Object.entries(updates)) {
 			config.set(key as keyof Settings, value);
 		}

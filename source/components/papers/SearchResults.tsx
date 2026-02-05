@@ -9,8 +9,11 @@ import {PaperListItem} from './PaperListItem.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
 import {usePaperSearch} from '../../hooks/usePapers.js';
 import {useApp} from '../../context/AppContext.js';
-import type {SearchParams} from '../../api/types.js';
 import {useTheme} from '../../theme/index.js';
+import type {
+	SearchParams,
+	PaperListItem as PaperListItemType,
+} from '../../api/types.js';
 
 export function SearchResults() {
 	const {params, navigate, goBack} = useNavigation();
@@ -18,7 +21,7 @@ export function SearchResults() {
 	const {search, loading, error} = usePaperSearch();
 	const {colors} = useTheme();
 
-	const [papers, setPapers] = useState<unknown[]>([]);
+	const [papers, setPapers] = useState<PaperListItemType[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [selectedForDownload, setSelectedForDownload] = useState<Set<string>>(
 		new Set(),
@@ -48,7 +51,8 @@ export function SearchResults() {
 		}
 
 		fetchResults();
-	}, [page, searchParams, search]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [page, search]);
 
 	const handlePageChange = async (newPage: number) => {
 		if (searchParams) {
@@ -86,22 +90,23 @@ export function SearchResults() {
 		}
 
 		if (key.return && papers[selectedIndex]) {
-			setSelectedPaper(papers[selectedIndex] as never);
+			const selectedPaper = papers[selectedIndex];
+			setSelectedPaper(selectedPaper);
 			navigate('paper-detail', {
-				paperId: (papers[selectedIndex] as {genSlug: string}).genSlug,
+				paperId: selectedPaper.genSlug,
 			});
 		}
 
 		if (input === ' ' && papers[selectedIndex]) {
-			const {paperId} = papers[selectedIndex] as {paperId: string};
+			const selectedPaper = papers[selectedIndex];
 			setSelectedForDownload(prev => {
 				const newSet = new Set(prev);
-				if (newSet.has(paperId)) {
-					newSet.delete(paperId);
+				if (newSet.has(selectedPaper.paperId)) {
+					newSet.delete(selectedPaper.paperId);
 				} else {
-					newSet.add(paperId);
+					newSet.add(selectedPaper.paperId);
 				}
-				// eslint-disable-next-line @typescript-eslint/padding-line-between-statements
+
 				return newSet;
 			});
 		}
@@ -157,13 +162,11 @@ export function SearchResults() {
 				<Box flexDirection="column">
 					{papers.map((paper, index) => (
 						<PaperListItem
-							key={(paper as {paperId: string}).paperId}
-							paper={paper as never}
+							key={paper.paperId}
+							paper={paper}
 							isSelected={index === selectedIndex}
 							index={index}
-							isSelectedForDownload={selectedForDownload.has(
-								(paper as {paperId: string}).paperId,
-							)}
+							isSelectedForDownload={selectedForDownload.has(paper.paperId)}
 						/>
 					))}
 				</Box>

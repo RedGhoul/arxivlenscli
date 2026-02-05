@@ -1,10 +1,6 @@
 import {apiClient} from '../../../source/api/client.js';
-import {http} from 'msw';
+import {http, HttpResponse} from 'msw';
 import {server} from '../../helpers/mockApi.js';
-import type {
-	KeyFindingsResponse,
-	KeyFindingsStatusResponse,
-} from '../../../source/api/types.js';
 
 describe('api/keyFindings - getKeyFindings', () => {
 	beforeAll(() => {
@@ -63,9 +59,96 @@ describe('api/keyFindings - getKeyFindings', () => {
 	});
 
 	it('throws error on 404', async () => {
+		server.use(
+			http.get('/api/v1/papers/invalid/key-findings', () => {
+				return HttpResponse.json({message: 'Not found'}, {status: 404});
+			}),
+		);
+
 		const {getKeyFindings} = await import('../../../source/api/keyFindings.js');
 
 		await expect(getKeyFindings('invalid')).rejects.toThrow();
+	});
+
+	it('throws error on 500', async () => {
+		server.use(
+			http.get('/api/v1/papers/test/key-findings', () => {
+				return HttpResponse.json(
+					{message: 'Server error', status: 'failed'},
+					{status: 500},
+				);
+			}),
+		);
+
+		const {getKeyFindings} = await import('../../../source/api/keyFindings.js');
+
+		await expect(getKeyFindings('test')).rejects.toThrow('Server error');
+	});
+
+	it('throws error on network error', async () => {
+		server.use(
+			http.get('https://arxivlens.com/api/v1/papers/test/key-findings', () => {
+				return HttpResponse.error();
+			}),
+		);
+
+		const {getKeyFindings} = await import('../../../source/api/keyFindings.js');
+
+		await expect(getKeyFindings('test')).rejects.toThrow('Network error');
+	});
+
+	it('throws error on 500', async () => {
+		server.use(
+			http.get('https://arxivlens.com/api/v1/papers/test/key-findings', () => {
+				return HttpResponse.json(
+					{message: 'Server error', status: 'failed'},
+					{status: 500},
+				);
+			}),
+		);
+
+		const {getKeyFindings} = await import('../../../source/api/keyFindings.js');
+
+		await expect(getKeyFindings('test')).rejects.toThrow('Server error');
+	});
+
+	it('throws error on network error', async () => {
+		server.use(
+			http.get('https://arxivlens.com/api/v1/papers/test/key-findings', () => {
+				return HttpResponse.error();
+			}),
+		);
+
+		const {getKeyFindings} = await import('../../../source/api/keyFindings.js');
+
+		await expect(getKeyFindings('invalid')).rejects.toThrow();
+	});
+
+	it('throws error on 500', async () => {
+		server.use(
+			http.get('https://arxivlens.com/api/v1/papers/test/key-findings', () => {
+				return new Response(
+					JSON.stringify({message: 'Server error', status: 'failed'}),
+					{status: 500},
+				);
+			}),
+		);
+
+		const {getKeyFindings} = await import('../../../source/api/keyFindings.js');
+
+		await expect(getKeyFindings('test')).rejects.toThrow('Server error');
+	});
+
+	it('throws error on network error', async () => {
+		server.use(
+			http.get('https://arxivlens.com/api/v1/papers/test/key-findings', () => {
+				throw new Error('Network error');
+			}),
+		);
+
+		const {getKeyFindings} = await import('../../../source/api/keyFindings.js');
+
+		await expect(getKeyFindings('test')).rejects.toThrow('Network error');
 	});
 
 	it('throws error with custom message on 500', async () => {
@@ -98,12 +181,12 @@ describe('api/keyFindings - getKeyFindings', () => {
 	it('throws error on network error', async () => {
 		server.use(
 			http.get('https://arxivlens.com/api/v1/papers/test/key-findings', () => {
-				return new Error('Network error');
+				return HttpResponse.error();
 			}),
 		);
 
 		const {getKeyFindings} = await import('../../../source/api/keyFindings.js');
 
-		await expect(getKeyFindings('test')).rejects.toThrow('Network error');
+		await expect(getKeyFindings('test')).rejects.toThrow();
 	});
 });

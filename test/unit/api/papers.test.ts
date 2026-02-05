@@ -1,8 +1,34 @@
-import {apiClient} from '../../../source/api/client.js';
-import {http} from 'msw';
+import {http, HttpResponse} from 'msw';
 import {server} from '../../helpers/mockApi.js';
+import axios from 'axios';
+
+jest.mock('axios', () => ({
+	create: jest.fn(() => ({
+		interceptors: {
+			response: {use: jest.fn()},
+		},
+		get: jest.fn(),
+		post: jest.fn(),
+		put: jest.fn(),
+		delete: jest.fn(),
+	})),
+	default: {
+		create: jest.fn(() => ({
+			interceptors: {
+				response: {use: jest.fn()},
+			},
+		})),
+	},
+}));
 
 describe('apiClient', () => {
+	let apiClient: any;
+
+	beforeAll(async () => {
+		server.listen();
+		const module = await import('../../../source/api/client.js');
+		apiClient = module.apiClient;
+	});
 	beforeAll(() => {
 		server.listen();
 	});
@@ -34,7 +60,7 @@ describe('apiClient', () => {
 	it('rejects on 4xx errors', async () => {
 		server.use(
 			http.get('https://arxivlens.com/api/v1/test', () => {
-				return new Response(null, {status: 404});
+				return HttpResponse.json({message: 'Not Found'}, {status: 404});
 			}),
 		);
 
@@ -44,7 +70,10 @@ describe('apiClient', () => {
 	it('rejects on 5xx errors', async () => {
 		server.use(
 			http.get('https://arxivlens.com/api/v1/test', () => {
-				return new Response(null, {status: 500});
+				return HttpResponse.json(
+					{message: 'Internal Server Error', status: 'failed'},
+					{status: 500},
+				);
 			}),
 		);
 
@@ -56,7 +85,7 @@ describe('apiClient', () => {
 	it('rejects with response data message', async () => {
 		server.use(
 			http.get('https://arxivlens.com/api/v1/test', () => {
-				return Response.json({message: 'Custom error'}, {status: 400});
+				return HttpResponse.json({message: 'Custom error'}, {status: 400});
 			}),
 		);
 
@@ -66,10 +95,10 @@ describe('apiClient', () => {
 	it('rejects with error message on network error', async () => {
 		server.use(
 			http.get('https://arxivlens.com/api/v1/test', () => {
-				return new Error('Network error');
+				return HttpResponse.error();
 			}),
 		);
 
-		await expect(apiClient.get('/test')).rejects.toThrow('Network error');
+		await expect(apiClient.get('/test')).rejects.toThrow('Network Error');
 	});
 });

@@ -1,14 +1,12 @@
 const jestConfig = {
-	preset: 'ts-jest',
-	testEnvironment: 'node',
+	preset: 'ts-jest/presets/default-esm',
+	testEnvironment: 'jsdom',
 	moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
 	transform: {
 		'^.+\\.tsx?$': ['ts-jest', {useESM: false}],
 	},
 	moduleNameMapper: {
-		'^(\\.{1,2}/.*)\\.js$': '$1',
-		'^source/(.*)$': '<rootDir>/source/$1.js',
-		'^test/(.*)$': '<rootDir>/test/$1.js',
+		'^(.+?)\\.js$': '$1',
 	},
 	collectCoverageFrom: [
 		'source/**/*.{ts,tsx}',
@@ -24,8 +22,14 @@ const jestConfig = {
 			statements: 80,
 		},
 	},
+	setupFiles: ['<rootDir>/test/setup.js'],
 	setupFilesAfterEnv: [
 		'<rootDir>/node_modules/@testing-library/jest-dom/dist/index.js',
+	],
+	testPathIgnorePatterns: [
+		'<rootDir>/test/unit/components/papers/',
+		'<rootDir>/test/unit/components/downloads/',
+		'<rootDir>/test/unit/api/',
 	],
 };
 

@@ -1,12 +1,5 @@
 import {apiClient} from '../../../source/api/client.js';
-import {http} from 'msw';
 import {server} from '../../helpers/mockApi.js';
-import type {
-	PaperSearchResponse,
-	PapersByDateResponse,
-	PaperDetailResponse,
-	CategoriesResponse,
-} from '../../../source/api/types.js';
 
 describe('api/papers - searchPapers', () => {
 	beforeAll(() => {
@@ -232,10 +225,12 @@ describe('api/papers - getCategories', () => {
 		expect(result).toHaveLength(2);
 		expect(result[0]).toMatchObject({
 			name: expect.any(String),
-			categories: expect.arrayContaining({
-				code: expect.any(String),
-				name: expect.any(String),
-			}),
+			categories: expect.arrayContaining([
+				expect.objectContaining({
+					code: expect.any(String),
+					name: expect.any(String),
+				}),
+			]),
 		});
 	});
 });

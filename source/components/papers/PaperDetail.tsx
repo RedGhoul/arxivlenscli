@@ -15,6 +15,7 @@ export function PaperDetail() {
 	const {selectedPaper} = useApp();
 	const {fetchDetail, data, loading, error} = usePaperDetail();
 	const [showFullAbstract, setShowFullAbstract] = useState(false);
+	const [actionError, setActionError] = useState<string | null>(null);
 	const {exit} = useInkApp();
 
 	const paperId = params['paperId'] as string;
@@ -42,13 +43,25 @@ export function PaperDetail() {
 			if (input === 'o') {
 				try {
 					await open(paper.arxivLink);
-				} catch {}
+					setActionError(null);
+				} catch (error) {
+					const errorMessage =
+						error instanceof Error ? error.message : 'Failed to open link';
+					setActionError(errorMessage);
+					setTimeout(() => setActionError(null), 3000);
+				}
 			}
 
 			if (input === 'p') {
 				try {
 					await open(paper.pdfLink);
-				} catch {}
+					setActionError(null);
+				} catch (error) {
+					const errorMessage =
+						error instanceof Error ? error.message : 'Failed to open PDF';
+					setActionError(errorMessage);
+					setTimeout(() => setActionError(null), 3000);
+				}
 			}
 
 			if (input === 'd') {
@@ -58,10 +71,10 @@ export function PaperDetail() {
 			}
 
 			if (input === 'a') {
-				const firstAuthor = paper.authors?.[0];
-				if (firstAuthor) {
+				const authors = paper.authors || [];
+				if (authors.length > 0 && authors[0]) {
 					navigate('author-profile', {
-						authorSlug: firstAuthor.genSlug,
+						authorSlug: authors[0].genSlug,
 					});
 				}
 			}
@@ -139,6 +152,7 @@ export function PaperDetail() {
 	return (
 		<Box flexDirection="column">
 			<Header subtitle="Paper Details" />
+			{actionError && <ErrorMessage message={actionError} />}
 
 			<Box marginBottom={1}>
 				<Text bold color="cyan">

@@ -67,11 +67,45 @@
 		"overrides": [
 			{
 				"files": [
-					"test/**/*.{ts,js}"
+					"test/**/*.{ts,js,cjs}"
 				],
 				"rules": {
 					"@typescript-eslint/no-unsafe-call": "off",
-					"import/no-unassigned-import": "off"
+					"import/no-unassigned-import": "off",
+					"n/file-extension-in-import": "off"
+				}
+			},
+			{
+				"files": [
+					"test/setup.ts",
+					"test/setup.js",
+					"test/resolver.cjs"
+				],
+				"rules": {
+					"unicorn/prefer-global/text-encoder": "off",
+					"unicorn/prefer-global/text-decoder": "off",
+					"unicorn/prefer-node-protocol": "off",
+					"unicorn/prefer-module": "off",
+					"n/no-restricted-require": "off",
+					"n/prefer-global/text-encoder": "off",
+					"n/prefer-global/text-decoder": "off"
+				}
+			},
+			{
+				"files": [
+					"source/config/settings.ts"
+				],
+				"rules": {
+					"unicorn/prefer-type-error": "off"
+				}
+			},
+			{
+				"files": [
+					"source/components/papers/PaperDetail.tsx"
+				],
+				"rules": {
+					"@typescript-eslint/no-confusing-void-expression": "off",
+					"no-lone-blocks": "off"
 				}
 			}
 		],

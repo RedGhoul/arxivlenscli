@@ -5,6 +5,10 @@ export type KeyFindingsResult =
 	| {ready: true; data: KeyFindingsResponse}
 	| {ready: false; data: KeyFindingsStatusResponse};
 
+interface ApiError extends Error {
+	status?: number;
+}
+
 export async function getKeyFindings(
 	paperId: string,
 ): Promise<KeyFindingsResult> {
@@ -32,7 +36,7 @@ export async function getKeyFindings(
 		'message' in response.data
 			? (response.data as {message: string}).message
 			: 'Failed to fetch key findings',
-	);
-	(error as any).status = response.status;
+	) as ApiError;
+	error.status = response.status;
 	throw error;
 }
