@@ -2,6 +2,10 @@ import {useState, useCallback, useRef, useEffect} from 'react';
 import type {PaperListItem} from '../api/types.js';
 import {downloadPaper, getDownloadPath} from '../api/downloads.js';
 import type {Settings} from '../config/settings.js';
+import {
+	MAX_DOWNLOAD_RETRIES,
+	DOWNLOAD_QUEUE_DELAY_MS,
+} from '../config/constants.js';
 
 export type DownloadStatus = 'pending' | 'downloading' | 'completed' | 'failed';
 
@@ -18,7 +22,10 @@ export function useDownloads(settings: Settings) {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
 	const retryCountRef = useRef<Map<string, number>>(new Map());
-	const MAX_RETRIES = 3;
+	// Use ref to track if processQueue is currently executing (prevents concurrent execution)
+	const isExecutingRef = useRef(false);
+	// Use ref to track if we have a pending processQueue call scheduled
+	const pendingProcessRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const addToQueue = useCallback((papers: PaperListItem[]) => {
 		setQueue(prev => {
@@ -47,17 +54,29 @@ export function useDownloads(settings: Settings) {
 	);
 
 	const processQueue = useCallback(async () => {
-		if (isProcessing) return;
+		// Prevent concurrent execution of processQueue
+		if (isExecutingRef.current) return;
+		isExecutingRef.current = true;
+
 		if (!settings.downloadPath) {
+			isExecutingRef.current = false;
 			setIsProcessing(false);
 			return;
 		}
 
+		// Ensure UI state shows processing
 		setIsProcessing(true);
 
-		const pendingItems = queue.filter(item => item.status === 'pending');
+		// Get current queue state synchronously to avoid stale closures
+		let currentQueue: DownloadItem[] = [];
+		setQueue(prev => {
+			currentQueue = prev;
+			return prev;
+		});
 
-		const activeCount = queue.filter(
+		const pendingItems = currentQueue.filter(item => item.status === 'pending');
+
+		const activeCount = currentQueue.filter(
 			item => item.status === 'downloading',
 		).length;
 
@@ -102,7 +121,7 @@ export function useDownloads(settings: Settings) {
 					const currentRetries =
 						retryCountRef.current.get(item.paper.paperId) ?? 0;
 
-					if (currentRetries < MAX_RETRIES) {
+					if (currentRetries < MAX_DOWNLOAD_RETRIES) {
 						retryCountRef.current.set(item.paper.paperId, currentRetries + 1);
 						updateItemStatus(item.paper.paperId, {
 							status: 'pending',
@@ -122,30 +141,58 @@ export function useDownloads(settings: Settings) {
 
 		await Promise.all(downloadTasks);
 
-		const hasPendingOrDownloading = queue.some(
-			item => item.status === 'pending' || item.status === 'downloading',
-		);
+		// Re-check queue state after downloads complete
+		let hasMoreWork = false;
+		setQueue(prev => {
+			hasMoreWork = prev.some(
+				item => item.status === 'pending' || item.status === 'downloading',
+			);
+			return prev;
+		});
 
-		if (hasPendingOrDownloading) {
-			setTimeout(() => {
+		// Clear any existing pending timeout before scheduling a new one
+		if (pendingProcessRef.current) {
+			clearTimeout(pendingProcessRef.current);
+			pendingProcessRef.current = null;
+		}
+
+		if (hasMoreWork) {
+			// Reset executing flag before scheduling to allow next iteration
+			isExecutingRef.current = false;
+			pendingProcessRef.current = setTimeout(() => {
+				pendingProcessRef.current = null;
 				void processQueue();
-			}, 100);
+			}, DOWNLOAD_QUEUE_DELAY_MS);
 		} else {
+			isExecutingRef.current = false;
 			setIsProcessing(false);
 		}
-	}, [isProcessing, queue, settings, updateItemStatus]);
+	}, [settings, updateItemStatus]);
 
+	// Cleanup pending timeout on unmount
 	useEffect(() => {
-		if (isProcessing) {
-			void processQueue();
-		}
-	}, [isProcessing, processQueue]);
-
-	const startDownloads = useCallback(() => {
-		setIsProcessing(true);
+		return () => {
+			if (pendingProcessRef.current) {
+				clearTimeout(pendingProcessRef.current);
+			}
+		};
 	}, []);
 
+	const startDownloads = useCallback(() => {
+		if (!isExecutingRef.current) {
+			// Set processing state immediately for UI responsiveness
+			setIsProcessing(true);
+			void processQueue();
+		}
+	}, [processQueue]);
+
 	const pauseDownloads = useCallback(() => {
+		// Clear pending process timeout
+		if (pendingProcessRef.current) {
+			clearTimeout(pendingProcessRef.current);
+			pendingProcessRef.current = null;
+		}
+
 		for (const controller of abortControllersRef.current.values()) {
 			controller.abort();
 		}
@@ -158,6 +205,7 @@ export function useDownloads(settings: Settings) {
 					: item,
 			),
 		);
+		isExecutingRef.current = false;
 		setIsProcessing(false);
 	}, []);
 
@@ -198,6 +246,12 @@ export function useDownloads(settings: Settings) {
 	);
 
 	const clearAll = useCallback(() => {
+		// Clear pending process timeout
+		if (pendingProcessRef.current) {
+			clearTimeout(pendingProcessRef.current);
+			pendingProcessRef.current = null;
+		}
+
 		for (const controller of abortControllersRef.current.values()) {
 			controller.abort();
 		}
@@ -205,6 +259,7 @@ export function useDownloads(settings: Settings) {
 		abortControllersRef.current.clear();
 		retryCountRef.current.clear();
 		setQueue([]);
+		isExecutingRef.current = false;
 		setIsProcessing(false);
 	}, []);
 

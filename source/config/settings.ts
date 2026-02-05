@@ -120,6 +120,8 @@ export function getSettings(): Settings {
 			downloadHistory: config.get('downloadHistory'),
 		};
 	} catch {
+		// Config file may be corrupted or inaccessible - return defaults
+		// This is a graceful fallback to ensure the app can still function
 		return defaults;
 	}
 }
@@ -134,7 +136,10 @@ export function updateSetting<K extends keyof Settings>(
 ): void {
 	try {
 		config.set(key, value);
-	} catch {}
+	} catch {
+		// Silently fail if config cannot be written (e.g., permission issues)
+		// The app will continue with in-memory values until next restart
+	}
 }
 
 export function updateSettings(updates: Partial<Settings>): void {
@@ -143,13 +148,19 @@ export function updateSettings(updates: Partial<Settings>): void {
 		for (const [key, value] of Object.entries(updates)) {
 			config.set(key as keyof Settings, value);
 		}
-	} catch {}
+	} catch {
+		// Validation failed or config write failed
+		// Silently fail to prevent app crashes - settings remain unchanged
+	}
 }
 
 export function resetSettings(): void {
 	try {
 		config.clear();
-	} catch {}
+	} catch {
+		// Config clear failed (e.g., permission issues)
+		// User may need to manually delete config file
+	}
 }
 
 export const settingsConfig = config;

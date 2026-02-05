@@ -1,5 +1,5 @@
-import React, {useState, useEffect} from 'react';
-import {Box, Text, useInput} from 'ink';
+import React, {useState, useEffect, useCallback} from 'react';
+import {Box, Text} from 'ink';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
 import {Pagination} from '../common/Pagination.js';
@@ -10,6 +10,8 @@ import {useNavigation} from '../../hooks/useNavigation.js';
 import {usePapersByDate} from '../../hooks/usePapers.js';
 import {useApp} from '../../context/AppContext.js';
 import {useTheme} from '../../theme/index.js';
+import {usePaperListNavigation} from '../../hooks/usePaperListNavigation.js';
+import type {PaperListItem as PaperListItemType} from '../../api/types.js';
 
 export function DatePapers() {
 	const {params, navigate, goBack} = useNavigation();
@@ -17,8 +19,7 @@ export function DatePapers() {
 	const {fetchByDate, loading, error} = usePapersByDate();
 	const {colors} = useTheme();
 
-	const [papers, setPapers] = useState<unknown[]>([]);
-	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [papers, setPapers] = useState<PaperListItemType[]>([]);
 
 	const title = (params['title'] as string) || 'Papers';
 	const date = params['date'] as string;
@@ -30,10 +31,6 @@ export function DatePapers() {
 	const pageSize = (params['pageSize'] as number) || 20;
 
 	useEffect(() => {
-		setSelectedIndex(0);
-	}, [page]);
-
-	useEffect(() => {
 		async function fetchResults() {
 			if (date) {
 				const result = await fetchByDate(date, page, pageSize);
@@ -43,58 +40,61 @@ export function DatePapers() {
 			}
 		}
 
-		fetchResults();
+		void fetchResults();
 	}, [page, date, pageSize, fetchByDate]);
 
-	const handlePageChange = async (newPage: number) => {
+	const handleSelectPaper = useCallback(
+		(paper: PaperListItemType) => {
+			setSelectedPaper(paper);
+			navigate('paper-detail', {
+				paperId: paper.genSlug,
+			});
+		},
+		[setSelectedPaper, navigate],
+	);
+
+	const handlePreviousPage = useCallback(async () => {
 		if (date) {
-			const result = await fetchByDate(date, newPage, pageSize);
+			const result = await fetchByDate(date, page - 1, pageSize);
 			if (result?.pagination) {
 				setPapers(result.papers || []);
 				navigate('date-papers', {
 					...params,
-					page: newPage,
+					page: page - 1,
 					totalPages: Math.ceil(result.pagination.total / pageSize),
-					hasNext: newPage * pageSize < result.pagination.total,
-					hasPrev: newPage > 1,
+					hasNext: (page - 1) * pageSize < result.pagination.total,
+					hasPrev: page - 1 > 1,
 				});
 			}
 		}
-	};
+	}, [date, fetchByDate, page, pageSize, navigate, params]);
 
-	useInput((input, key) => {
-		if (loading) return;
-
-		if (key.escape || input === 'q') {
-			goBack();
-			return;
+	const handleNextPage = useCallback(async () => {
+		if (date) {
+			const result = await fetchByDate(date, page + 1, pageSize);
+			if (result?.pagination) {
+				setPapers(result.papers || []);
+				navigate('date-papers', {
+					...params,
+					page: page + 1,
+					totalPages: Math.ceil(result.pagination.total / pageSize),
+					hasNext: (page + 1) * pageSize < result.pagination.total,
+					hasPrev: true,
+				});
+			}
 		}
+	}, [date, fetchByDate, page, pageSize, navigate, params]);
 
-		if (papers.length === 0) return;
-
-		if (key.upArrow) {
-			setSelectedIndex(prev => Math.max(0, prev - 1));
-		}
-
-		if (key.downArrow) {
-			const maxIndex = papers.length - 1;
-			setSelectedIndex(prev => Math.min(maxIndex, prev + 1));
-		}
-
-		if ((input === 'p' || key.leftArrow) && hasPrev) {
-			handlePageChange(page - 1);
-		}
-
-		if ((input === 'n' || key.rightArrow) && hasNext) {
-			handlePageChange(page + 1);
-		}
-
-		if (key.return && papers[selectedIndex]) {
-			setSelectedPaper(papers[selectedIndex] as never);
-			navigate('paper-detail', {
-				paperId: (papers[selectedIndex] as {genSlug: string}).genSlug,
-			});
-		}
+	const {selectedIndex} = usePaperListNavigation({
+		papers,
+		loading,
+		page,
+		hasNext,
+		hasPrev,
+		onSelectPaper: handleSelectPaper,
+		onPreviousPage: handlePreviousPage,
+		onNextPage: handleNextPage,
+		onGoBack: goBack,
 	});
 
 	if (loading) {
@@ -130,8 +130,8 @@ export function DatePapers() {
 				<Box flexDirection="column">
 					{papers.map((paper, index) => (
 						<PaperListItem
-							key={(paper as {paperId: string}).paperId}
-							paper={paper as never}
+							key={paper.paperId}
+							paper={paper}
 							isSelected={index === selectedIndex}
 							index={index}
 						/>

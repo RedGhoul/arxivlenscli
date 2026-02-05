@@ -1,9 +1,16 @@
-import {renderHook, act} from '@testing-library/react';
+import {renderHook, act, waitFor} from '@testing-library/react';
 import type {PaperListItem} from '../../../source/api/types.js';
 import {useDownloads} from '../../../source/hooks/useDownloads.js';
 
+// Create a deferred promise pattern for controlled testing
+let downloadResolve: (() => void) | null = null;
+const createDownloadPromise = () =>
+	new Promise<void>(resolve => {
+		downloadResolve = resolve;
+	});
+
 jest.mock('../../../source/api/downloads.js', () => ({
-	downloadPaper: jest.fn(),
+	downloadPaper: jest.fn(() => createDownloadPromise()),
 	getDownloadPath: jest.fn(
 		(basePath: string, paper: PaperListItem) =>
 			`${basePath}/${paper.paperId}.pdf`,
@@ -55,6 +62,7 @@ const mockPaper: PaperListItem = {
 describe('useDownloads', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
+		downloadResolve = null;
 	});
 
 	it('initializes with empty queue', () => {
@@ -84,34 +92,35 @@ describe('useDownloads', () => {
 
 	it('starts downloads when startDownloads called', async () => {
 		const {result} = renderHook(() => useDownloads(mockSettings));
+
 		act(() => {
 			result.current.addToQueue([mockPaper]);
 			result.current.startDownloads();
 		});
 
-		await act(async () => {
-			await new Promise<void>(resolve => {
-				setTimeout(resolve, 100);
-			});
+		// Wait for the processing state to be set
+		await waitFor(() => {
+			expect(result.current.isProcessing).toBe(true);
 		});
 
-		expect(result.current.isProcessing).toBe(true);
+		// Cleanup: resolve the pending download to avoid hanging promises
+		if (downloadResolve) {
+			await act(async () => {
+				downloadResolve!();
+			});
+		}
 	});
 
 	it('pauses downloads when pauseDownloads called', async () => {
 		const {result} = renderHook(() => useDownloads(mockSettings));
+
 		act(() => {
 			result.current.addToQueue([mockPaper]);
 			result.current.startDownloads();
 			result.current.pauseDownloads();
 		});
 
-		await act(async () => {
-			await new Promise<void>(resolve => {
-				setTimeout(resolve, 100);
-			});
-		});
-
+		// Pausing should immediately set isProcessing to false
 		expect(result.current.isProcessing).toBe(false);
 	});
 

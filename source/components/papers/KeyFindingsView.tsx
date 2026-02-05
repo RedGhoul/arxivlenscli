@@ -6,6 +6,7 @@ import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
 import {getKeyFindings} from '../../api/keyFindings.js';
+import {KEY_FINDINGS_POLL_INTERVAL_MS} from '../../config/constants.js';
 import type {KeyFindings} from '../../api/types.js';
 
 type Tab =
@@ -31,38 +32,59 @@ export function KeyFindingsView() {
 	const [status, setStatus] = useState('Loading...');
 	const [activeTab, setActiveTab] = useState<Tab>('methodology');
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+	// Track if a fetch is currently in progress to prevent concurrent requests
+	const isFetchingRef = useRef(false);
 
 	const paperId = params['paperId'] as string;
 	const paperTitle = params['paperTitle'] as string | undefined;
 
 	useEffect(() => {
+		let cancelled = false;
+
 		const fetchData = async () => {
+			// Prevent concurrent fetch requests
+			if (isFetchingRef.current || cancelled) return;
+			isFetchingRef.current = true;
+
 			try {
 				const result = await getKeyFindings(paperId);
+
+				// Check if component is still mounted
+				if (cancelled) return;
 
 				if (result.ready) {
 					setFindings(result.data.findings);
 					setLoading(false);
 				} else {
 					setStatus(result.data.message || 'Generating key findings...');
-					// Poll every 3 seconds
-					timeoutRef.current = setTimeout(fetchData, 3000);
+					// Schedule polling - only if not cancelled
+					if (!cancelled) {
+						timeoutRef.current = setTimeout(
+							fetchData,
+							KEY_FINDINGS_POLL_INTERVAL_MS,
+						);
+					}
 				}
 			} catch (err) {
+				if (cancelled) return;
 				setError(
 					err instanceof Error ? err.message : 'Failed to load key findings',
 				);
 				setLoading(false);
+			} finally {
+				isFetchingRef.current = false;
 			}
 		};
 
 		if (paperId) {
-			fetchData();
+			void fetchData();
 		}
 
 		return () => {
+			cancelled = true;
 			if (timeoutRef.current) {
 				clearTimeout(timeoutRef.current);
+				timeoutRef.current = null;
 			}
 		};
 	}, [paperId]);

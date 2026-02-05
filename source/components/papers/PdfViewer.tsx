@@ -61,6 +61,7 @@ export function PdfViewer() {
 					setImageData(rendered);
 				}
 			} catch {
+				// PDF rendering failed - clear image and let finally handle loading state
 				if (!cancelled) {
 					setImageData(null);
 				}

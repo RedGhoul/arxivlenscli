@@ -3,12 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {createHash} from 'node:crypto';
+import {PDF_CACHE_TTL_MS} from '../config/constants.js';
 
 const CACHE_DIR = path.join(os.tmpdir(), 'arxivlens-pdf-cache');
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 function getCacheKey(url: string): string {
-	return createHash('md5').update(url).digest('hex');
+	// Use SHA-256 instead of MD5 for stronger collision resistance
+	return createHash('sha256').update(url).digest('hex');
 }
 
 function getCachePath(url: string): string {
@@ -44,6 +45,7 @@ async function verifyFileIntegrity(filePath: string): Promise<boolean> {
 
 		return true;
 	} catch {
+		// Cache file unreadable or corrupted - treat as invalid
 		return false;
 	}
 }
@@ -55,13 +57,15 @@ export async function downloadPdf(url: string): Promise<string> {
 
 	try {
 		const stat = await fs.promises.stat(cachePath);
-		if (Date.now() - stat.mtimeMs < CACHE_TTL_MS) {
+		if (Date.now() - stat.mtimeMs < PDF_CACHE_TTL_MS) {
 			const isValid = await verifyFileIntegrity(cachePath);
 			if (isValid) {
 				return cachePath;
 			}
 		}
-	} catch {}
+	} catch {
+		// Cache miss or file doesn't exist - proceed to download
+	}
 
 	const response = await fetch(url);
 	if (!response.ok) {
@@ -93,5 +97,7 @@ export async function downloadPdf(url: string): Promise<string> {
 export async function clearPdfCache(): Promise<void> {
 	try {
 		await fs.promises.rm(CACHE_DIR, {recursive: true, force: true});
-	} catch {}
+	} catch {
+		// Ignore errors when clearing cache - directory may not exist
+	}
 }

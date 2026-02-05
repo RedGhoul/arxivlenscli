@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Box, Text, useInput, useApp as useInkApp} from 'ink';
 import open from 'open';
 import {Header} from '../common/Header.js';
@@ -10,6 +10,31 @@ import {usePaperDetail} from '../../hooks/usePapers.js';
 import {useApp} from '../../context/AppContext.js';
 import {formatDate, formatAuthors} from '../../utils/formatting.js';
 
+/**
+ * Validates that a URL is a safe arXiv URL before opening it.
+ * Prevents potential security issues from malicious API responses.
+ */
+function isValidArxivUrl(url: string): boolean {
+	try {
+		const parsed = new URL(url);
+		// Only allow HTTPS protocol
+		if (parsed.protocol !== 'https:') {
+			return false;
+		}
+
+		// Allow arxiv.org and its subdomains (e.g., export.arxiv.org)
+		const validHosts = ['arxiv.org', 'export.arxiv.org', 'browse.arxiv.org'];
+		const isArxivHost =
+			validHosts.includes(parsed.hostname) ||
+			parsed.hostname.endsWith('.arxiv.org');
+
+		return isArxivHost;
+	} catch {
+		// Invalid URL format - treat as unsafe
+		return false;
+	}
+}
+
 export function PaperDetail() {
 	const {params, goBack, navigate} = useNavigation();
 	const {selectedPaper} = useApp();
@@ -17,6 +42,16 @@ export function PaperDetail() {
 	const [showFullAbstract, setShowFullAbstract] = useState(false);
 	const [actionError, setActionError] = useState<string | null>(null);
 	const {exit} = useInkApp();
+	const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// Cleanup timeout on unmount to prevent memory leaks
+	useEffect(() => {
+		return () => {
+			if (errorTimeoutRef.current) {
+				clearTimeout(errorTimeoutRef.current);
+			}
+		};
+	}, []);
 
 	const paperId = params['paperId'] as string;
 
@@ -42,25 +77,51 @@ export function PaperDetail() {
 		if (paper) {
 			if (input === 'o') {
 				try {
+					if (!isValidArxivUrl(paper.arxivLink)) {
+						throw new Error(
+							'Invalid arXiv URL: only arxiv.org links are allowed',
+						);
+					}
+
 					await open(paper.arxivLink);
 					setActionError(null);
 				} catch (error) {
 					const errorMessage =
 						error instanceof Error ? error.message : 'Failed to open link';
 					setActionError(errorMessage);
-					setTimeout(() => setActionError(null), 3000);
+					if (errorTimeoutRef.current) {
+						clearTimeout(errorTimeoutRef.current);
+					}
+
+					errorTimeoutRef.current = setTimeout(
+						() => setActionError(null),
+						3000,
+					);
 				}
 			}
 
 			if (input === 'p') {
 				try {
+					if (!isValidArxivUrl(paper.pdfLink)) {
+						throw new Error(
+							'Invalid PDF URL: only arxiv.org links are allowed',
+						);
+					}
+
 					await open(paper.pdfLink);
 					setActionError(null);
 				} catch (error) {
 					const errorMessage =
 						error instanceof Error ? error.message : 'Failed to open PDF';
 					setActionError(errorMessage);
-					setTimeout(() => setActionError(null), 3000);
+					if (errorTimeoutRef.current) {
+						clearTimeout(errorTimeoutRef.current);
+					}
+
+					errorTimeoutRef.current = setTimeout(
+						() => setActionError(null),
+						3000,
+					);
 				}
 			}
 

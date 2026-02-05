@@ -30,6 +30,8 @@ export function usePdf(pdfUrl: string) {
 	});
 
 	const pdfDocRef = useRef<PdfDocumentProxy | null>(null);
+	// Track current loading operation to prevent race conditions
+	const loadingIdRef = useRef(0);
 	const cacheRef = useRef<{
 		text: Map<number, PdfTextPage>;
 		images: Map<number, PdfImagePage>;
@@ -38,16 +40,35 @@ export function usePdf(pdfUrl: string) {
 	// Load PDF on mount
 	useEffect(() => {
 		let cancelled = false;
+		// Increment loading ID to track this specific load operation
+		const currentLoadId = ++loadingIdRef.current;
+
+		// Destroy previous PDF document before loading new one
+		if (pdfDocRef.current) {
+			try {
+				pdfDocRef.current.destroy();
+			} catch {
+				// PDF document may already be destroyed or invalid
+			}
+
+			pdfDocRef.current = null;
+		}
+
+		// Clear caches when URL changes
+		cacheRef.current.text.clear();
+		cacheRef.current.images.clear();
 
 		const loadPdf = async () => {
 			try {
 				setState(s => ({...s, loading: true, error: null}));
 
 				const filePath = await downloadPdf(pdfUrl);
-				if (cancelled) return;
+				// Check if this load operation is still current
+				if (cancelled || currentLoadId !== loadingIdRef.current) return;
 
 				const pdfDoc = await loadPdfDocument(filePath);
-				if (cancelled) {
+				// Check again after async operation
+				if (cancelled || currentLoadId !== loadingIdRef.current) {
 					pdfDoc.destroy();
 					return;
 				}
@@ -56,7 +77,7 @@ export function usePdf(pdfUrl: string) {
 
 				// Load first page text
 				const textContent = await extractPageText(pdfDoc, 1);
-				if (cancelled) return;
+				if (cancelled || currentLoadId !== loadingIdRef.current) return;
 
 				cacheRef.current.text.set(1, textContent);
 
@@ -69,7 +90,7 @@ export function usePdf(pdfUrl: string) {
 					imageContent: null,
 				});
 			} catch (err) {
-				if (cancelled) return;
+				if (cancelled || currentLoadId !== loadingIdRef.current) return;
 				const rawMessage =
 					err instanceof Error ? err.message : 'Failed to load PDF';
 				// Provide user-friendly error messages
@@ -95,13 +116,23 @@ export function usePdf(pdfUrl: string) {
 			}
 		};
 
-		loadPdf();
+		void loadPdf();
 
 		return () => {
 			cancelled = true;
-			try {
-				pdfDocRef.current?.destroy();
-			} catch {}
+			// Only destroy if this cleanup is for the current document
+			// Note: currentLoadId is captured at effect creation time, which is the correct behavior
+			// eslint-disable-next-line react-hooks/exhaustive-deps -- currentLoadId is intentionally captured at effect creation
+			const isCurrentLoad = currentLoadId === loadingIdRef.current;
+			if (isCurrentLoad && pdfDocRef.current) {
+				try {
+					pdfDocRef.current.destroy();
+				} catch {
+					// PDF document may already be destroyed or invalid
+				}
+
+				pdfDocRef.current = null;
+			}
 		};
 	}, [pdfUrl]);
 

@@ -135,23 +135,33 @@ export function useBootSequence(lines: string[], enabled = true) {
 		setVisibleLines([]);
 		setIsComplete(false);
 
-		const timeouts: Array<ReturnType<typeof setTimeout>> = [];
+		// Track all timeouts for cleanup - use an object to allow mutation from callbacks
+		const timeoutTracker = {
+			lineTimeouts: [] as Array<ReturnType<typeof setTimeout>>,
+			completionTimeout: null as ReturnType<typeof setTimeout> | null,
+		};
 
 		for (const [index, line] of lines.entries()) {
 			const timeout = setTimeout(() => {
 				setVisibleLines(prev => [...prev, line]);
 				if (index === lines.length - 1) {
-					setTimeout(() => {
+					// Track the completion timeout for proper cleanup
+					timeoutTracker.completionTimeout = setTimeout(() => {
 						setIsComplete(true);
 					}, timing.bootDelay);
 				}
 			}, index * timing.bootDelay);
-			timeouts.push(timeout);
+			timeoutTracker.lineTimeouts.push(timeout);
 		}
 
 		return () => {
-			for (const timeout of timeouts) {
+			for (const timeout of timeoutTracker.lineTimeouts) {
 				clearTimeout(timeout);
+			}
+
+			// Also clear the completion timeout if it was scheduled
+			if (timeoutTracker.completionTimeout) {
+				clearTimeout(timeoutTracker.completionTimeout);
 			}
 		};
 	}, [lines, enabled]);

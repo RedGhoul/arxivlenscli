@@ -1,10 +1,9 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'https://arxivlens.com/api/v1';
+import {API_BASE_URL, API_TIMEOUT_MS} from '../config/constants.js';
 
 export const apiClient = axios.create({
 	baseURL: API_BASE_URL,
-	timeout: 30000,
+	timeout: API_TIMEOUT_MS,
 	headers: {
 		'Content-Type': 'application/json',
 	},
