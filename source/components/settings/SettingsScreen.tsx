@@ -105,10 +105,10 @@ export function SettingsScreen() {
 		return undefined;
 	}, [message]);
 
-	const currentOption = SETTINGS_OPTIONS[selectedIndex]!;
+	const currentOption = SETTINGS_OPTIONS[selectedIndex];
 
 	const handleToggle = () => {
-		if (currentOption.type === 'toggle') {
+		if (currentOption?.type === 'toggle') {
 			const newValue = !settings[currentOption.key];
 			updateSettings({
 				[currentOption.key]: newValue as Settings[typeof currentOption.key],
@@ -117,7 +117,7 @@ export function SettingsScreen() {
 	};
 
 	const handleCycleSelect = (direction: 1 | -1) => {
-		if (currentOption.type === 'select' && currentOption.options) {
+		if (currentOption?.type === 'select' && currentOption.options) {
 			const currentValue = settings[currentOption.key];
 			const currentIndex = currentOption.options.findIndex(
 				o => o.value === currentValue,
@@ -125,10 +125,13 @@ export function SettingsScreen() {
 			const newIndex =
 				(currentIndex + direction + currentOption.options.length) %
 				currentOption.options.length;
-			const newValue = currentOption.options[newIndex]!.value;
-			updateSettings({
-				[currentOption.key]: newValue as Settings[typeof currentOption.key],
-			});
+			const newOption = currentOption.options[newIndex];
+			if (newOption) {
+				updateSettings({
+					[currentOption.key]:
+						newOption.value as Settings[typeof currentOption.key],
+				});
+			}
 		}
 	};
 
@@ -153,17 +156,17 @@ export function SettingsScreen() {
 		} else if (key.downArrow) {
 			setSelectedIndex(i => Math.min(SETTINGS_OPTIONS.length - 1, i + 1));
 		} else if (key.return || input === ' ') {
-			if (currentOption.type === 'toggle') {
+			if (currentOption?.type === 'toggle') {
 				handleToggle();
 			} else {
 				handleCycleSelect(1);
 			}
 		} else if (key.leftArrow) {
-			if (currentOption.type === 'select') {
+			if (currentOption?.type === 'select') {
 				handleCycleSelect(-1);
 			}
 		} else if (key.rightArrow) {
-			if (currentOption.type === 'select') {
+			if (currentOption?.type === 'select') {
 				handleCycleSelect(1);
 			}
 		} else if (input === 'r') {

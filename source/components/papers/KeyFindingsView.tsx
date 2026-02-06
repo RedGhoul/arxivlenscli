@@ -99,13 +99,15 @@ export function KeyFindingsView() {
 			if (key.leftArrow) {
 				const currentIndex = TABS.findIndex(t => t.key === activeTab);
 				const newIndex = currentIndex > 0 ? currentIndex - 1 : TABS.length - 1;
-				setActiveTab(TABS[newIndex]!.key);
+				const newTab = TABS[newIndex];
+				if (newTab) setActiveTab(newTab.key);
 			}
 
 			if (key.rightArrow) {
 				const currentIndex = TABS.findIndex(t => t.key === activeTab);
 				const newIndex = currentIndex < TABS.length - 1 ? currentIndex + 1 : 0;
-				setActiveTab(TABS[newIndex]!.key);
+				const newTab = TABS[newIndex];
+				if (newTab) setActiveTab(newTab.key);
 			}
 		}
 	});

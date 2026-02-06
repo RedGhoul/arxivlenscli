@@ -92,7 +92,8 @@ export function PaperSearch() {
 			];
 			const currentIdx = fields.indexOf(focusField);
 			const nextIdx = (currentIdx + 1) % fields.length;
-			setFocusField(fields[nextIdx]!);
+			const nextField = fields[nextIdx];
+			if (nextField) setFocusField(nextField);
 		}
 
 		if (key.upArrow && focusField !== 'query') {
@@ -105,7 +106,8 @@ export function PaperSearch() {
 			];
 			const currentIdx = fields.indexOf(focusField);
 			const prevIdx = currentIdx === 0 ? fields.length - 1 : currentIdx - 1;
-			setFocusField(fields[prevIdx]!);
+			const prevField = fields[prevIdx];
+			if (prevField) setFocusField(prevField);
 		}
 
 		if (key.return) {

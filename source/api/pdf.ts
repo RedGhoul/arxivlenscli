@@ -7,6 +7,12 @@ import {PDF_CACHE_TTL_MS} from '../config/constants.js';
 
 const CACHE_DIR = path.join(os.tmpdir(), 'arxivlens-pdf-cache');
 
+/**
+ * In-memory lock to prevent concurrent downloads of the same PDF.
+ * Maps URL to a Promise that resolves when the download completes.
+ */
+const downloadLocks = new Map<string, Promise<string>>();
+
 function getCacheKey(url: string): string {
 	// Use SHA-256 instead of MD5 for stronger collision resistance
 	return createHash('sha256').update(url).digest('hex');
@@ -50,7 +56,11 @@ async function verifyFileIntegrity(filePath: string): Promise<boolean> {
 	}
 }
 
-export async function downloadPdf(url: string): Promise<string> {
+/**
+ * Internal function that performs the actual download.
+ * Should only be called through downloadPdf which handles locking.
+ */
+async function downloadPdfInternal(url: string): Promise<string> {
 	await fs.promises.mkdir(CACHE_DIR, {recursive: true});
 
 	const cachePath = getCachePath(url);
@@ -92,6 +102,30 @@ export async function downloadPdf(url: string): Promise<string> {
 	}
 
 	return cachePath;
+}
+
+/**
+ * Downloads a PDF and caches it locally.
+ * Uses locking to prevent concurrent downloads of the same URL,
+ * which could corrupt the cache file.
+ */
+export async function downloadPdf(url: string): Promise<string> {
+	// Check if this URL is already being downloaded
+	const existingDownload = downloadLocks.get(url);
+	if (existingDownload) {
+		// Wait for the existing download to complete
+		return existingDownload;
+	}
+
+	// Create a new download promise and store it
+	const downloadPromise = downloadPdfInternal(url).finally(() => {
+		// Clean up the lock when done (success or failure)
+		downloadLocks.delete(url);
+	});
+
+	downloadLocks.set(url, downloadPromise);
+
+	return downloadPromise;
 }
 
 export async function clearPdfCache(): Promise<void> {

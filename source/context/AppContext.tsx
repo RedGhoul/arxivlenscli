@@ -86,7 +86,9 @@ export function AppProvider({children}: {children: ReactNode}) {
 		setNavigation(prev => {
 			if (prev.history.length === 0) return prev;
 			const history = [...prev.history];
-			const last = history.pop()!;
+			const last = history.pop();
+			// Defensive check - should never be undefined due to length check above
+			if (!last) return prev;
 			return {
 				route: last.route,
 				params: last.params,
