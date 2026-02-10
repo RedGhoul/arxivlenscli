@@ -18,6 +18,7 @@ export interface Settings {
 	maxConcurrentDownloads: number;
 	fileNameFormat: 'title+id' | 'id-only';
 	downloadHistory: DownloadRecord[];
+	searchHistory: string[];
 }
 
 const defaults: Settings = {
@@ -31,6 +32,7 @@ const defaults: Settings = {
 	maxConcurrentDownloads: 3,
 	fileNameFormat: 'title+id',
 	downloadHistory: [],
+	searchHistory: [],
 };
 
 const config = new Conf<Settings>({
@@ -94,6 +96,12 @@ function validateSettings(settings: Partial<Settings>): void {
 		}
 	}
 
+	if (settings.searchHistory !== undefined) {
+		if (!Array.isArray(settings.searchHistory)) {
+			throw new TypeError('Invalid searchHistory: must be an array');
+		}
+	}
+
 	if (settings.downloadPath !== undefined && settings.downloadPath !== null) {
 		if (typeof settings.downloadPath !== 'string') {
 			throw new TypeError('Invalid downloadPath: must be a string or null');
@@ -118,6 +126,7 @@ export function getSettings(): Settings {
 			maxConcurrentDownloads: config.get('maxConcurrentDownloads'),
 			fileNameFormat: config.get('fileNameFormat'),
 			downloadHistory: config.get('downloadHistory'),
+			searchHistory: config.get('searchHistory'),
 		};
 	} catch {
 		// Config file may be corrupted or inaccessible - return defaults

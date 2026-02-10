@@ -42,6 +42,7 @@ const mockSettings = {
 	autoRefreshKeyFindings: true,
 	colorScheme: 'default' as const,
 	downloadHistory: [],
+	searchHistory: [],
 };
 
 const mockPaper: PaperListItem = {

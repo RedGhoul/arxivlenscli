@@ -146,6 +146,7 @@ export function SettingsScreen() {
 			colorScheme: 'default',
 			maxConcurrentDownloads: 3,
 			fileNameFormat: 'title+id',
+			searchHistory: [],
 		});
 		setMessage('Settings reset to defaults');
 	};

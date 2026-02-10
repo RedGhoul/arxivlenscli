@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Box, Text, useInput} from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
@@ -13,6 +13,8 @@ import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import {SORT_OPTIONS} from '../../utils/constants.js';
 import {useTheme} from '../../theme/index.js';
+import {useSearchHistory} from '../../hooks/useSearchHistory.js';
+import {SearchSuggestions} from './SearchSuggestions.js';
 
 type FocusField = 'query' | 'sort' | 'recent' | 'cited' | 'submit';
 
@@ -33,8 +35,34 @@ export function PaperSearch() {
 	const [focusField, setFocusField] = useState<FocusField>('query');
 	const [showSortDropdown, setShowSortDropdown] = useState(false);
 
+	const {addToHistory, getMatches} = useSearchHistory();
+	const [suggestions, setSuggestions] = useState<string[]>([]);
+	const [suggestionIndex, setSuggestionIndex] = useState(0);
+	const [showSuggestions, setShowSuggestions] = useState(false);
+
+	useEffect(() => {
+		if (focusField !== 'query') {
+			setShowSuggestions(false);
+		}
+	}, [focusField]);
+
+	const handleQueryChange = (value: string) => {
+		setQuery(value);
+		if (value.trim().length > 0 && focusField === 'query') {
+			const matches = getMatches(value);
+			setSuggestions(matches);
+			setShowSuggestions(matches.length > 0);
+			setSuggestionIndex(0);
+		} else {
+			setSuggestions([]);
+			setShowSuggestions(false);
+		}
+	};
+
 	const handleSearch = async () => {
 		if (!query.trim()) return;
+		setShowSuggestions(false);
+		addToHistory(query.trim());
 
 		const params = {
 			query: query.trim(),
@@ -72,6 +100,12 @@ export function PaperSearch() {
 			return;
 		}
 
+		// Dismiss suggestions on Escape without going back
+		if (showSuggestions && key.escape) {
+			setShowSuggestions(false);
+			return;
+		}
+
 		if (key.escape) {
 			goBack();
 			return;
@@ -82,7 +116,54 @@ export function PaperSearch() {
 			return;
 		}
 
-		if (key.tab || (key.downArrow && focusField !== 'query')) {
+		// Suggestion navigation when visible and query field focused
+		if (showSuggestions && focusField === 'query') {
+			if (key.downArrow) {
+				setSuggestionIndex(prev => Math.min(suggestions.length - 1, prev + 1));
+				return;
+			}
+
+			if (key.upArrow) {
+				if (suggestionIndex > 0) {
+					setSuggestionIndex(prev => prev - 1);
+					return;
+				}
+
+				setShowSuggestions(false);
+				return;
+			}
+
+			if (key.return) {
+				const selected = suggestions[suggestionIndex];
+				if (selected) {
+					setQuery(selected);
+					setShowSuggestions(false);
+					setSuggestions([]);
+					return;
+				}
+
+				// No valid suggestion selected — fall through to normal search
+			}
+		}
+
+		// Tab always moves to next field and dismisses suggestions
+		if (key.tab) {
+			setShowSuggestions(false);
+			const fields: FocusField[] = [
+				'query',
+				'sort',
+				'recent',
+				'cited',
+				'submit',
+			];
+			const currentIdx = fields.indexOf(focusField);
+			const nextIdx = (currentIdx + 1) % fields.length;
+			const nextField = fields[nextIdx];
+			if (nextField) setFocusField(nextField);
+			return;
+		}
+
+		if (key.downArrow && focusField !== 'query') {
 			const fields: FocusField[] = [
 				'query',
 				'sort',
@@ -157,12 +238,18 @@ export function PaperSearch() {
 						</Text>
 						<TextInput
 							value={query}
-							onChange={setQuery}
+							onChange={handleQueryChange}
 							onSubmit={handleSearch}
 							focus={focusField === 'query'}
 							placeholder="Enter search terms..."
 						/>
 					</Box>
+
+					<SearchSuggestions
+						suggestions={suggestions}
+						selectedIndex={suggestionIndex}
+						visible={showSuggestions}
+					/>
 
 					<Box marginBottom={1}>
 						<Text

@@ -8,10 +8,12 @@ import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
 import {useCategories, usePaperSearch} from '../../hooks/usePapers.js';
+import {useCategoryCounts} from '../../hooks/useCategoryCounts.js';
 import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import type {CategoryGroup} from '../../api/types.js';
 import {useTheme} from '../../theme/index.js';
+import {formatCount} from '../../utils/formatting.js';
 
 type Level = 'groups' | 'categories';
 
@@ -27,6 +29,11 @@ export function CategoryBrowser() {
 	const {setPapersList, setLastSearchParams} = useApp();
 	const {colors, symbols} = useTheme();
 	const pageSize = usePageSize();
+	const {
+		fetchCountsForCategories,
+		getCount,
+		isLoading: isLoadingCount,
+	} = useCategoryCounts();
 
 	const [level, setLevel] = useState<Level>('groups');
 	const [selectedGroup, setSelectedGroup] = useState<CategoryGroup | null>(
@@ -36,6 +43,12 @@ export function CategoryBrowser() {
 	useEffect(() => {
 		fetchCategories();
 	}, [fetchCategories]);
+
+	useEffect(() => {
+		if (selectedGroup) {
+			fetchCountsForCategories(selectedGroup.categories);
+		}
+	}, [selectedGroup, fetchCountsForCategories]);
 
 	const handleGroupSelect = (item: {value: string}) => {
 		const group = categoriesData?.find(g => g.name === item.value);
@@ -138,10 +151,21 @@ export function CategoryBrowser() {
 	}
 
 	if (level === 'categories' && selectedGroup) {
-		const categoryItems = selectedGroup.categories.map(cat => ({
-			label: `${cat.name} (${cat.code})`,
-			value: cat.code,
-		}));
+		const categoryItems = selectedGroup.categories.map(cat => {
+			const count = getCount(cat.code);
+			const loading = isLoadingCount(cat.code);
+			let suffix = '';
+			if (loading) {
+				suffix = ' \u00B7 ...';
+			} else if (count !== undefined) {
+				suffix = ` \u00B7 ${formatCount(count)} papers`;
+			}
+
+			return {
+				label: `${cat.name} (${cat.code})${suffix}`,
+				value: cat.code,
+			};
+		});
 
 		return (
 			<Box flexDirection="column">

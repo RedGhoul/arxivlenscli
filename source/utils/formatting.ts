@@ -70,3 +70,7 @@ export function parseCategories(
 	if (!categoriesStr) return [];
 	return categoriesStr.split(' ').filter(Boolean);
 }
+
+export function formatCount(n: number): string {
+	return n.toLocaleString('en-US');
+}

@@ -32,3 +32,10 @@ export const PDF_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // Polling Configuration
 export const KEY_FINDINGS_POLL_INTERVAL_MS = 3000; // 3 seconds
+
+// Category Count Configuration
+export const CATEGORY_COUNT_CONCURRENCY = 5;
+export const CATEGORY_COUNT_PAGE_SIZE = 1;
+
+// Search History Configuration
+export const MAX_SEARCH_HISTORY = 50;
