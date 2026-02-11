@@ -19,7 +19,7 @@
 		"@napi-rs/canvas": "^0.1.88",
 		"@types/figlet": "^1.7.0",
 		"@types/gradient-string": "^1.1.6",
-		"axios": "^1.13.2",
+		"axios": "^1.13.5",
 		"cli-spinners": "^3.3.0",
 		"conf": "^15.0.2",
 		"figlet": "^1.9.4",
