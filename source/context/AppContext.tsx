@@ -12,6 +12,7 @@ import {
 	getSettings,
 	updateSettings as updateConfigSettings,
 } from '../config/settings.js';
+import {validateDownloadPath} from '../api/downloads.js';
 
 interface NavigationState {
 	route: Route;
@@ -35,7 +36,10 @@ interface AppState {
 	setPapersList: (papers: PaperListItem[]) => void;
 
 	settings: Settings;
-	updateSettings: (settings: Partial<Settings>) => void;
+	updateSettings: (settings: Partial<Settings>) => {
+		success: boolean;
+		error?: string;
+	};
 
 	showHelp: boolean;
 	toggleHelp: () => void;
@@ -63,13 +67,30 @@ export function AppProvider({children}: {children: ReactNode}) {
 		setShowHelp(prev => !prev);
 	}, []);
 
-	const updateSettings = useCallback((updates: Partial<Settings>) => {
-		setSettings(prev => {
-			const newSettings = {...prev, ...updates};
-			updateConfigSettings(newSettings);
-			return newSettings;
-		});
-	}, []);
+	const updateSettings = useCallback(
+		(updates: Partial<Settings>): {success: boolean; error?: string} => {
+			// Validate download path before persisting
+			if (updates.downloadPath !== undefined && updates.downloadPath !== null) {
+				try {
+					validateDownloadPath(updates.downloadPath);
+				} catch (error) {
+					return {
+						success: false,
+						error:
+							error instanceof Error ? error.message : 'Invalid download path',
+					};
+				}
+			}
+
+			const result = updateConfigSettings(updates);
+			if (result.success) {
+				setSettings(prev => ({...prev, ...updates}));
+			}
+
+			return result;
+		},
+		[],
+	);
 
 	const navigate = useCallback(
 		(route: Route, params: Record<string, unknown> = {}) => {

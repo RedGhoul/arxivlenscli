@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Box, Text, useInput} from 'ink';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
@@ -20,23 +20,34 @@ export function DownloadManager() {
 	const [showPathPrompt, setShowPathPrompt] = useState(false);
 
 	const downloads = useDownloads(settings);
-	const initialPapers = papers;
+	const initializedRef = useRef(false);
 
 	useEffect(() => {
-		if (initialPapers.length > 0 && settings.downloadPath) {
-			downloads.addToQueue(initialPapers);
-		} else if (initialPapers.length > 0 && !settings.downloadPath) {
+		if (initializedRef.current) return;
+		if (papers.length > 0 && settings.downloadPath) {
+			initializedRef.current = true;
+			downloads.addToQueue(papers);
+		} else if (papers.length > 0 && !settings.downloadPath) {
+			initializedRef.current = true;
 			setShowPathPrompt(true);
 		}
-	}, [initialPapers, settings.downloadPath, downloads]);
+	}, [papers, settings.downloadPath, downloads.addToQueue]);
 
 	const progress = downloads.getProgress();
 
+	const [pathError, setPathError] = useState<string | null>(null);
+
 	const handlePathConfirm = (path: string) => {
-		updateSettings({downloadPath: path});
+		const result = updateSettings({downloadPath: path});
+		if (!result.success) {
+			setPathError(result.error ?? 'Invalid download path');
+			return;
+		}
+
+		setPathError(null);
 		setShowPathPrompt(false);
-		if (initialPapers.length > 0) {
-			downloads.addToQueue(initialPapers);
+		if (papers.length > 0) {
+			downloads.addToQueue(papers);
 		}
 	};
 
@@ -72,6 +83,11 @@ export function DownloadManager() {
 		return (
 			<Box flexDirection="column">
 				<Header subtitle="Download Manager" />
+				{pathError && (
+					<Box paddingX={1}>
+						<ErrorMessage message={pathError} />
+					</Box>
+				)}
 				<Box paddingX={1} marginTop={1}>
 					<DownloadPathPrompt
 						onConfirm={handlePathConfirm}

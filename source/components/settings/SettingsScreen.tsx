@@ -90,7 +90,10 @@ export function SettingsScreen() {
 	const {colors, symbols, separators} = useTheme();
 	const {settings, updateSettings} = useApp();
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	const [message, setMessage] = useState<string | null>(null);
+	const [message, setMessage] = useState<{
+		text: string;
+		type: 'success' | 'error';
+	} | null>(null);
 
 	useEffect(() => {
 		if (message) {
@@ -110,9 +113,15 @@ export function SettingsScreen() {
 	const handleToggle = () => {
 		if (currentOption?.type === 'toggle') {
 			const newValue = !settings[currentOption.key];
-			updateSettings({
+			const result = updateSettings({
 				[currentOption.key]: newValue as Settings[typeof currentOption.key],
 			});
+			if (!result.success) {
+				setMessage({
+					text: result.error ?? 'Failed to update setting',
+					type: 'error',
+				});
+			}
 		}
 	};
 
@@ -127,10 +136,16 @@ export function SettingsScreen() {
 				currentOption.options.length;
 			const newOption = currentOption.options[newIndex];
 			if (newOption) {
-				updateSettings({
+				const result = updateSettings({
 					[currentOption.key]:
 						newOption.value as Settings[typeof currentOption.key],
 				});
+				if (!result.success) {
+					setMessage({
+						text: result.error ?? 'Failed to update setting',
+						type: 'error',
+					});
+				}
 			}
 		}
 	};
@@ -148,7 +163,7 @@ export function SettingsScreen() {
 			fileNameFormat: 'title+id',
 			searchHistory: [],
 		});
-		setMessage('Settings reset to defaults');
+		setMessage({text: 'Settings reset to defaults', type: 'success'});
 	};
 
 	useInput((input, key) => {
@@ -293,8 +308,10 @@ export function SettingsScreen() {
 
 			{message && (
 				<Box marginY={1}>
-					<Text color={colors.success}>
-						{symbols.checkmark} {message}
+					<Text
+						color={message.type === 'error' ? colors.error : colors.success}
+					>
+						{message.type === 'error' ? '!' : symbols.checkmark} {message.text}
 					</Text>
 				</Box>
 			)}

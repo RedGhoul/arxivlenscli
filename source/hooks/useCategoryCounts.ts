@@ -9,12 +9,14 @@ import {
 interface CategoryCountState {
 	counts: Map<string, number>;
 	loading: Set<string>;
+	failed: Set<string>;
 }
 
 export function useCategoryCounts() {
 	const [state, setState] = useState<CategoryCountState>({
 		counts: new Map(),
 		loading: new Set(),
+		failed: new Set(),
 	});
 	const cacheRef = useRef<Map<string, number>>(new Map());
 	const loadingRef = useRef<Set<string>>(new Set());
@@ -86,6 +88,7 @@ export function useCategoryCounts() {
 				setState(prev => {
 					const newCounts = new Map(prev.counts);
 					const newLoading = new Set(prev.loading);
+					const newFailed = new Set(prev.failed);
 
 					for (const [idx, result] of results.entries()) {
 						const cat = batch[idx];
@@ -93,12 +96,15 @@ export function useCategoryCounts() {
 
 						if (result.status === 'fulfilled') {
 							newCounts.set(result.value.code, result.value.count);
+							newFailed.delete(cat.code);
+						} else {
+							newFailed.add(cat.code);
 						}
 
 						newLoading.delete(cat.code);
 					}
 
-					return {counts: newCounts, loading: newLoading};
+					return {counts: newCounts, loading: newLoading, failed: newFailed};
 				});
 			}
 		},
@@ -116,9 +122,15 @@ export function useCategoryCounts() {
 		[state.loading],
 	);
 
+	const hasFailed = useCallback(
+		(code: string): boolean => state.failed.has(code),
+		[state.failed],
+	);
+
 	return {
 		fetchCountsForCategories,
 		getCount,
 		isLoading,
+		hasFailed,
 	};
 }

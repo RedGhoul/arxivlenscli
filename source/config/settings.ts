@@ -151,15 +151,22 @@ export function updateSetting<K extends keyof Settings>(
 	}
 }
 
-export function updateSettings(updates: Partial<Settings>): void {
+export function updateSettings(updates: Partial<Settings>): {
+	success: boolean;
+	error?: string;
+} {
 	try {
 		validateSettings(updates);
 		for (const [key, value] of Object.entries(updates)) {
 			config.set(key as keyof Settings, value);
 		}
-	} catch {
-		// Validation failed or config write failed
-		// Silently fail to prevent app crashes - settings remain unchanged
+
+		return {success: true};
+	} catch (error) {
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : 'Failed to save settings',
+		};
 	}
 }
 

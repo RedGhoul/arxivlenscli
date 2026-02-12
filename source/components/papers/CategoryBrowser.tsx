@@ -33,6 +33,7 @@ export function CategoryBrowser() {
 		fetchCountsForCategories,
 		getCount,
 		isLoading: isLoadingCount,
+		hasFailed: hasCountFailed,
 	} = useCategoryCounts();
 
 	const [level, setLevel] = useState<Level>('groups');
@@ -154,11 +155,14 @@ export function CategoryBrowser() {
 		const categoryItems = selectedGroup.categories.map(cat => {
 			const count = getCount(cat.code);
 			const loading = isLoadingCount(cat.code);
+			const failed = hasCountFailed(cat.code);
 			let suffix = '';
 			if (loading) {
 				suffix = ' \u00B7 ...';
 			} else if (count !== undefined) {
 				suffix = ` \u00B7 ${formatCount(count)} papers`;
+			} else if (failed) {
+				suffix = ' \u00B7 \u2014';
 			}
 
 			return {

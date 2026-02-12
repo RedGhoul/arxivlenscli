@@ -34,8 +34,14 @@ export function SearchResults() {
 
 	// Track request ID to prevent stale updates from out-of-order responses
 	const requestIdRef = useRef(0);
+	// Track what was last fetched to prevent duplicate API calls
+	const lastFetchKeyRef = useRef('');
 
 	useEffect(() => {
+		const fetchKey = JSON.stringify({searchParams, page});
+		if (fetchKey === lastFetchKeyRef.current) return;
+		lastFetchKeyRef.current = fetchKey;
+
 		// Increment request ID to track this specific request
 		const currentRequestId = ++requestIdRef.current;
 
@@ -63,34 +69,52 @@ export function SearchResults() {
 	);
 
 	const handlePreviousPage = useCallback(async () => {
-		if (searchParams) {
-			const result = await search({...searchParams, page: page - 1});
-			if (result) {
-				setPapers(result.papers || []);
-				navigate('search-results', {
-					...params,
-					page: result.page,
-					totalPages: result.totalPages,
-					hasNext: result.hasNextPage,
-					hasPrev: result.hasPreviousPage,
-				});
+		try {
+			if (searchParams) {
+				const newPage = page - 1;
+				const result = await search({...searchParams, page: newPage});
+				if (result) {
+					lastFetchKeyRef.current = JSON.stringify({
+						searchParams,
+						page: newPage,
+					});
+					setPapers(result.papers || []);
+					navigate('search-results', {
+						...params,
+						page: result.page,
+						totalPages: result.totalPages,
+						hasNext: result.hasNextPage,
+						hasPrev: result.hasPreviousPage,
+					});
+				}
 			}
+		} catch {
+			// Error is already surfaced via useApi's error state
 		}
 	}, [searchParams, search, page, navigate, params]);
 
 	const handleNextPage = useCallback(async () => {
-		if (searchParams) {
-			const result = await search({...searchParams, page: page + 1});
-			if (result) {
-				setPapers(result.papers || []);
-				navigate('search-results', {
-					...params,
-					page: result.page,
-					totalPages: result.totalPages,
-					hasNext: result.hasNextPage,
-					hasPrev: result.hasPreviousPage,
-				});
+		try {
+			if (searchParams) {
+				const newPage = page + 1;
+				const result = await search({...searchParams, page: newPage});
+				if (result) {
+					lastFetchKeyRef.current = JSON.stringify({
+						searchParams,
+						page: newPage,
+					});
+					setPapers(result.papers || []);
+					navigate('search-results', {
+						...params,
+						page: result.page,
+						totalPages: result.totalPages,
+						hasNext: result.hasNextPage,
+						hasPrev: result.hasPreviousPage,
+					});
+				}
 			}
+		} catch {
+			// Error is already surfaced via useApi's error state
 		}
 	}, [searchParams, search, page, navigate, params]);
 

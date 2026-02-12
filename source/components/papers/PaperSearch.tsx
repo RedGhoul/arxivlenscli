@@ -126,10 +126,8 @@ export function PaperSearch() {
 			if (key.upArrow) {
 				if (suggestionIndex > 0) {
 					setSuggestionIndex(prev => prev - 1);
-					return;
 				}
 
-				setShowSuggestions(false);
 				return;
 			}
 

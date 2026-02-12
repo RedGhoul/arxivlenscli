@@ -41,26 +41,30 @@ export function PaperList() {
 	}, [page]);
 
 	const handlePageChange = async (newPage: number) => {
-		if (source === 'search' && params['searchParams']) {
-			const searchParams = params['searchParams'] as SearchParams;
-			const result = await search({...searchParams, page: newPage});
-			if (result) {
-				setPapersList(result.papers || []);
+		try {
+			if (source === 'search' && params['searchParams']) {
+				const searchParams = params['searchParams'] as SearchParams;
+				const result = await search({...searchParams, page: newPage});
+				if (result) {
+					setPapersList(result.papers || []);
+					navigate('paper-list', {
+						...params,
+						page: result.page,
+						totalPages: result.totalPages,
+						hasNext: result.hasNextPage,
+						hasPrev: result.hasPreviousPage,
+					});
+				}
+			} else if (source === 'date' && params['date']) {
 				navigate('paper-list', {
 					...params,
-					page: result.page,
-					totalPages: result.totalPages,
-					hasNext: result.hasNextPage,
-					hasPrev: result.hasPreviousPage,
+					page: newPage,
+					hasNext: newPage * pageSize < (params['totalCount'] as number),
+					hasPrev: newPage > 1,
 				});
 			}
-		} else if (source === 'date' && params['date']) {
-			navigate('paper-list', {
-				...params,
-				page: newPage,
-				hasNext: newPage * pageSize < (params['totalCount'] as number),
-				hasPrev: newPage > 1,
-			});
+		} catch {
+			// Error is already surfaced via useApi's error state
 		}
 	};
 
