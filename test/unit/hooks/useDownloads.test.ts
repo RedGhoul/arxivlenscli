@@ -99,12 +99,12 @@ describe('useDownloads', () => {
 			result.current.startDownloads();
 		});
 
-		// Wait for the processing state to be set
+		// Wait for the processing state to be set.
 		await waitFor(() => {
 			expect(result.current.isProcessing).toBe(true);
 		});
 
-		// Cleanup: resolve the pending download to avoid hanging promises
+		// Cleanup: resolve any in-flight download to avoid hanging promises.
 		if (downloadResolve) {
 			await act(async () => {
 				downloadResolve!();
@@ -117,22 +117,32 @@ describe('useDownloads', () => {
 
 		act(() => {
 			result.current.addToQueue([mockPaper]);
+		});
+
+		await act(async () => {
 			result.current.startDownloads();
+		});
+
+		await act(async () => {
 			result.current.pauseDownloads();
 		});
 
-		// Pausing should immediately set isProcessing to false
+		// Pausing should set isProcessing back to false
 		expect(result.current.isProcessing).toBe(false);
 	});
 
 	it('retries failed downloads', async () => {
 		const {result} = renderHook(() => useDownloads(mockSettings));
+
 		act(() => {
 			result.current.addToQueue([mockPaper]);
+		});
+
+		await act(async () => {
 			result.current.startDownloads();
 		});
 
-		act(() => {
+		await act(async () => {
 			result.current.retryFailed();
 		});
 

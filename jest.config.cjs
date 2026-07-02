@@ -26,11 +26,6 @@ const jestConfig = {
 	setupFilesAfterEnv: [
 		'<rootDir>/node_modules/@testing-library/jest-dom/dist/index.js',
 	],
-	testPathIgnorePatterns: [
-		'<rootDir>/test/unit/components/papers/',
-		'<rootDir>/test/unit/components/downloads/',
-		'<rootDir>/test/unit/api/',
-	],
 };
 
 module.exports = jestConfig;

@@ -1,97 +1,73 @@
 import {apiClient} from '../../../source/api/client.js';
-import {server} from '../../helpers/mockApi.js';
+import {searchAuthors, getAuthorProfile} from '../../../source/api/authors.js';
+import {mockAuthorProfile} from '../../fixtures/data.js';
+
+jest.mock('../../../source/api/client.js', () => ({
+	apiClient: {get: jest.fn()},
+}));
+
+const get = apiClient.get as unknown as jest.Mock;
+
+const searchResponse = {
+	authors: [mockAuthorProfile],
+	totalCount: 1,
+	page: 1,
+	pageSize: 10,
+	totalPages: 1,
+	hasNextPage: false,
+	hasPreviousPage: false,
+};
 
 describe('api/authors - searchAuthors', () => {
-	beforeAll(() => {
-		server.listen();
-	});
-
 	beforeEach(() => {
 		jest.clearAllMocks();
+		get.mockResolvedValue({data: searchResponse});
 	});
 
-	afterAll(() => {
-		server.close();
-	});
-
-	it('sends correct request with author name', async () => {
-		const {searchAuthors} = await import('../../../source/api/authors.js');
-
+	it('sends the author name with default pagination', async () => {
 		await searchAuthors('John Smith');
 
-		expect(apiClient.get).toHaveBeenCalledWith('/authors', {
-			params: {
-				authorName: 'John Smith',
-				page: 1,
-				pageSize: 10,
-			},
+		expect(get).toHaveBeenCalledWith('/authors', {
+			params: {authorName: 'John Smith', page: 1, pageSize: 10},
 		});
 	});
 
-	it('sends pagination parameters', async () => {
-		const {searchAuthors} = await import('../../../source/api/authors.js');
-
+	it('sends explicit pagination parameters', async () => {
 		await searchAuthors('test', 2, 15);
 
-		expect(apiClient.get).toHaveBeenCalledWith('/authors', {
-			params: {
-				authorName: 'test',
-				page: 2,
-				pageSize: 15,
-			},
+		expect(get).toHaveBeenCalledWith('/authors', {
+			params: {authorName: 'test', page: 2, pageSize: 15},
 		});
 	});
 
-	it('returns authors data on success', async () => {
-		const {searchAuthors} = await import('../../../source/api/authors.js');
-
+	it('returns the response payload', async () => {
 		const result = await searchAuthors('test');
 
-		expect(result.authors).toHaveLength(1);
-		expect(result.totalCount).toBe(1);
-		expect(result.page).toBe(1);
-		expect(result.pageSize).toBe(10);
-		expect(result.totalPages).toBe(1);
-		expect(result.hasNextPage).toBe(false);
-		expect(result.hasPreviousPage).toBe(false);
+		expect(result).toEqual(searchResponse);
 	});
 });
 
 describe('api/authors - getAuthorProfile', () => {
-	beforeAll(() => {
-		server.listen();
-	});
-
 	beforeEach(() => {
 		jest.clearAllMocks();
+		get.mockResolvedValue({data: mockAuthorProfile});
 	});
 
-	afterAll(() => {
-		server.close();
+	it('requests the correct endpoint', async () => {
+		await getAuthorProfile('alice-smith');
+
+		expect(get).toHaveBeenCalledWith('/authors/alice-smith');
 	});
 
-	it('sends correct request with genSlug', async () => {
-		const {getAuthorProfile} = await import('../../../source/api/authors.js');
+	it('returns the author profile', async () => {
+		const result = await getAuthorProfile('alice-smith');
 
-		await getAuthorProfile('john-smith');
-
-		expect(apiClient.get).toHaveBeenCalledWith('/authors/john-smith');
+		expect(result).toEqual(mockAuthorProfile);
 	});
 
-	it('returns author profile on success', async () => {
-		const {getAuthorProfile} = await import('../../../source/api/authors.js');
+	it('propagates rejections from the client', async () => {
+		get.mockRejectedValue(new Error('Not found'));
 
-		const result = await getAuthorProfile('john-smith');
-
-		expect(result.name).toBe('John Smith');
-		expect(result.genSlug).toBe('john-smith');
-		expect(result.paperCount).toBe(10);
-		expect(result.papers).toHaveLength(1);
-		expect(result.paperTitles).toContain('Test Paper');
-	});
-	it('throws error on invalid author', async () => {
-		const {getAuthorProfile} = await import('../../../source/api/authors.js');
-
-		await expect(getAuthorProfile('invalid')).rejects.toThrow();
+		await expect(getAuthorProfile('invalid')).rejects.toThrow('Not found');
 	});
 });

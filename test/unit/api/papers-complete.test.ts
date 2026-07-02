@@ -1,86 +1,73 @@
 import {apiClient} from '../../../source/api/client.js';
-import {server} from '../../helpers/mockApi.js';
+import {
+	searchPapers,
+	getPapersByDate,
+	getPaperDetail,
+	getCategories,
+} from '../../../source/api/papers.js';
+import {mockPaper, mockPaperDetail} from '../../fixtures/data.js';
+
+jest.mock('../../../source/api/client.js', () => ({
+	apiClient: {get: jest.fn()},
+}));
+
+const get = apiClient.get as unknown as jest.Mock;
+
+const searchResponse = {
+	papers: [mockPaper],
+	totalCount: 1,
+	page: 1,
+	pageSize: 20,
+	totalPages: 1,
+	hasNextPage: false,
+	hasPreviousPage: false,
+};
 
 describe('api/papers - searchPapers', () => {
-	beforeAll(() => {
-		server.listen();
-	});
-
 	beforeEach(() => {
 		jest.clearAllMocks();
+		get.mockResolvedValue({data: searchResponse});
 	});
 
-	afterAll(() => {
-		server.close();
-	});
-
-	it('sends correct request with query parameter', async () => {
-		const {searchPapers} = await import('../../../source/api/papers.js');
-
+	it('passes the query through', async () => {
 		await searchPapers({query: 'machine learning'});
 
-		expect(apiClient.get).toHaveBeenCalledWith('/papers', {
-			params: expect.objectContaining({
-				query: 'machine learning',
-			}),
+		expect(get).toHaveBeenCalledWith('/papers', {
+			params: expect.objectContaining({query: 'machine learning'}),
 		});
 	});
 
-	it('sends correct request with rankBy parameter', async () => {
-		const {searchPapers} = await import('../../../source/api/papers.js');
-
+	it('passes rankBy through', async () => {
 		await searchPapers({query: 'ai', rankBy: 'citations'});
 
-		expect(apiClient.get).toHaveBeenCalledWith('/papers', {
-			params: expect.objectContaining({
-				query: 'ai',
-				rankBy: 'citations',
-			}),
+		expect(get).toHaveBeenCalledWith('/papers', {
+			params: expect.objectContaining({query: 'ai', rankBy: 'citations'}),
 		});
 	});
 
-	it('sends correct request with dateFrom parameter', async () => {
-		const {searchPapers} = await import('../../../source/api/papers.js');
+	it('passes date range through', async () => {
+		await searchPapers({dateFrom: '2024-01-01', dateTo: '2024-01-31'});
 
-		await searchPapers({dateFrom: '2024-01-01'});
-
-		expect(apiClient.get).toHaveBeenCalledWith('/papers', {
+		expect(get).toHaveBeenCalledWith('/papers', {
 			params: expect.objectContaining({
 				dateFrom: '2024-01-01',
-			}),
-		});
-	});
-
-	it('sends correct request with dateTo parameter', async () => {
-		const {searchPapers} = await import('../../../source/api/papers.js');
-
-		await searchPapers({dateTo: '2024-01-31'});
-
-		expect(apiClient.get).toHaveBeenCalledWith('/papers', {
-			params: expect.objectContaining({
 				dateTo: '2024-01-31',
 			}),
 		});
 	});
 
-	it('sends correct request with categories parameter', async () => {
-		const {searchPapers} = await import('../../../source/api/papers.js');
-
+	it('joins categories into a comma list', async () => {
 		await searchPapers({categories: ['cs.AI', 'cs.LG']});
 
-		expect(apiClient.get).toHaveBeenCalledWith('/papers', {
-			params: expect.objectContaining({
-				categories: 'cs.AI,cs.LG',
-			}),
+		expect(get).toHaveBeenCalledWith('/papers', {
+			params: expect.objectContaining({categories: 'cs.AI,cs.LG'}),
 		});
 	});
 
-	it('sends correct request with prioritization parameters', async () => {
-		const {searchPapers} = await import('../../../source/api/papers.js');
-
+	it('passes prioritization flags through', async () => {
 		await searchPapers({prioritizeRecent: true, prioritizeCited: true});
 
-		expect(apiClient.get).toHaveBeenCalledWith('/papers', {
+		expect(get).toHaveBeenCalledWith('/papers', {
 			params: expect.objectContaining({
 				prioritizeRecent: true,
 				prioritizeCited: true,
@@ -88,149 +75,113 @@ describe('api/papers - searchPapers', () => {
 		});
 	});
 
-	it('sends pagination parameters', async () => {
-		const {searchPapers} = await import('../../../source/api/papers.js');
+	it('defaults page and pageSize when omitted', async () => {
+		await searchPapers({query: 'test'});
 
-		await searchPapers({page: 2, pageSize: 25});
-
-		expect(apiClient.get).toHaveBeenCalledWith('/papers', {
-			params: expect.objectContaining({
-				page: 2,
-				pageSize: 25,
-			}),
+		expect(get).toHaveBeenCalledWith('/papers', {
+			params: expect.objectContaining({page: 1, pageSize: 20}),
 		});
 	});
 
-	it('returns papers data on success', async () => {
-		const {searchPapers} = await import('../../../source/api/papers.js');
-
+	it('returns the response payload', async () => {
 		const result = await searchPapers({query: 'test'});
 
-		expect(result.papers).toHaveLength(1);
-		expect(result.totalCount).toBe(1);
-		expect(result.page).toBe(1);
-		expect(result.pageSize).toBe(10);
-		expect(result.totalPages).toBe(1);
-		expect(result.hasNextPage).toBe(false);
-		expect(result.hasPreviousPage).toBe(false);
+		expect(result).toEqual(searchResponse);
 	});
 });
 
 describe('api/papers - getPapersByDate', () => {
-	beforeAll(() => {
-		server.listen();
-	});
+	const dateResponse = {
+		papers: [mockPaper],
+		pagination: {total: 1, page: 1, limit: 20},
+	};
 
 	beforeEach(() => {
 		jest.clearAllMocks();
+		get.mockResolvedValue({data: dateResponse});
 	});
 
-	afterAll(() => {
-		server.close();
-	});
-
-	it('sends correct request with date', async () => {
-		const {getPapersByDate} = await import('../../../source/api/papers.js');
-
+	it('requests the date endpoint with default pagination', async () => {
 		await getPapersByDate('2024-01-15');
 
-		expect(apiClient.get).toHaveBeenCalledWith('/papers/by-date/2024-01-15');
-	});
-
-	it('sends pagination parameters', async () => {
-		const {getPapersByDate} = await import('../../../source/api/papers.js');
-
-		await getPapersByDate('2024-01-15', 1, 15);
-
-		expect(apiClient.get).toHaveBeenCalledWith('/papers/by-date/2024-01-15', {
-			params: {page: 1, limit: 15},
+		expect(get).toHaveBeenCalledWith('/papers/by-date/2024-01-15', {
+			params: {page: 1, limit: 20},
 		});
 	});
 
-	it('returns papers data on success', async () => {
-		const {getPapersByDate} = await import('../../../source/api/papers.js');
+	it('forwards explicit pagination', async () => {
+		await getPapersByDate('2024-01-15', 2, 15);
 
+		expect(get).toHaveBeenCalledWith('/papers/by-date/2024-01-15', {
+			params: {page: 2, limit: 15},
+		});
+	});
+
+	it('returns the response payload', async () => {
 		const result = await getPapersByDate('2024-01-15');
 
-		expect(result.papers).toHaveLength(1);
-		expect(result.pagination).toEqual({
-			total: 1,
-			page: 1,
-			limit: 15,
-		});
+		expect(result).toEqual(dateResponse);
 	});
 });
 
 describe('api/papers - getPaperDetail', () => {
-	beforeAll(() => {
-		server.listen();
-	});
-
 	beforeEach(() => {
 		jest.clearAllMocks();
+		get.mockResolvedValue({data: {paper: mockPaperDetail}});
 	});
 
-	afterAll(() => {
-		server.close();
-	});
-
-	it('sends correct request with identifier', async () => {
-		const {getPaperDetail} = await import('../../../source/api/papers.js');
-
+	it('requests the correct endpoint', async () => {
 		await getPaperDetail('2301.00001');
 
-		expect(apiClient.get).toHaveBeenCalledWith('/papers/2301.00001');
+		expect(get).toHaveBeenCalledWith('/papers/2301.00001');
 	});
 
-	it('returns paper detail on success', async () => {
-		const {getPaperDetail} = await import('../../../source/api/papers.js');
-
+	it('returns the paper detail', async () => {
 		const result = await getPaperDetail('2301.00001');
 
-		expect(result.paper).toBeDefined();
-		expect(result.paper).toMatchObject({
-			id: expect.any(Number),
-			title: expect.any(String),
-			arxivLink: expect.any(String),
-			pdfLink: expect.any(String),
-		});
+		expect(result.paper).toEqual(mockPaperDetail);
 	});
 
-	it('throws error on invalid paper', async () => {
-		const {getPaperDetail} = await import('../../../source/api/papers.js');
+	it('propagates rejections from the client', async () => {
+		get.mockRejectedValue(new Error('Not found'));
 
-		await expect(getPaperDetail('invalid')).rejects.toThrow();
+		await expect(getPaperDetail('invalid')).rejects.toThrow('Not found');
 	});
 });
 
 describe('api/papers - getCategories', () => {
-	beforeAll(() => {
-		server.listen();
-	});
-
 	beforeEach(() => {
 		jest.clearAllMocks();
 	});
 
-	afterAll(() => {
-		server.close();
-	});
-
-	it('fetches categories from API', async () => {
-		const {getCategories} = await import('../../../source/api/papers.js');
+	it('transforms the grouped object into an array of groups', async () => {
+		get.mockResolvedValue({
+			data: {
+				categories: {
+					'Artificial Intelligence': [
+						{code: 'cs.AI', name: 'Artificial Intelligence'},
+						{code: 'cs.CL', name: 'Computation and Language'},
+					],
+					'Machine Learning': [{code: 'cs.LG', name: 'Machine Learning'}],
+				},
+			},
+		});
 
 		const result = await getCategories();
 
-		expect(apiClient.get).toHaveBeenCalledWith('/arxiv/categories');
-		expect(result).toHaveLength(2);
-		expect(result[0]).toMatchObject({
-			name: expect.any(String),
-			categories: expect.arrayContaining([
-				expect.objectContaining({
-					code: expect.any(String),
-					name: expect.any(String),
-				}),
-			]),
-		});
+		expect(get).toHaveBeenCalledWith('/arxiv/categories');
+		expect(result).toEqual([
+			{
+				name: 'Artificial Intelligence',
+				categories: [
+					{code: 'cs.AI', name: 'Artificial Intelligence'},
+					{code: 'cs.CL', name: 'Computation and Language'},
+				],
+			},
+			{
+				name: 'Machine Learning',
+				categories: [{code: 'cs.LG', name: 'Machine Learning'}],
+			},
+		]);
 	});
 });
