@@ -23,6 +23,8 @@ function sanitizeErrorMessage(message: string): string {
 	);
 }
 
+// Axios 1.16+ also exports `create` as a named member; the default instance factory is intended here.
+// eslint-disable-next-line import/no-named-as-default-member
 export const apiClient = axios.create({
 	baseURL: API_BASE_URL,
 	timeout: API_TIMEOUT_MS,
