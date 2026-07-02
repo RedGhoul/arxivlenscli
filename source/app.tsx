@@ -1,8 +1,11 @@
 import React from 'react';
-import {useInput, useApp as useInkApp} from 'ink';
+import {useInput, useApp as useInkApp, useStdout} from 'ink';
+import ansiEscapes from 'ansi-escapes';
 import {AppProvider, useApp} from './context/AppContext.js';
 import {MainMenu} from './components/menu/MainMenu.js';
 import {PaperSearch} from './components/papers/PaperSearch.js';
+import {SearchResults} from './components/papers/SearchResults.js';
+import {DatePapers} from './components/papers/DatePapers.js';
 import {PaperList} from './components/papers/PaperList.js';
 import {PaperDetail} from './components/papers/PaperDetail.js';
 import {KeyFindingsView} from './components/papers/KeyFindingsView.js';
@@ -12,15 +15,18 @@ import {CategoryBrowser} from './components/papers/CategoryBrowser.js';
 import {AuthorSearch} from './components/authors/AuthorSearch.js';
 import {AuthorList} from './components/authors/AuthorList.js';
 import {AuthorProfile} from './components/authors/AuthorProfile.js';
+import {DownloadManager} from './components/downloads/DownloadManager.js';
 import {SettingsScreen} from './components/settings/SettingsScreen.js';
 import {HelpOverlay} from './components/common/HelpOverlay.js';
 
 function Router() {
-	const {navigation, goBack, showHelp, toggleHelp} = useApp();
+	const {navigation, goBack, canGoBack, showHelp, toggleHelp} = useApp();
 	const {exit} = useInkApp();
+	const {stdout} = useStdout();
 
 	useInput((input, key) => {
-		if (input === 'Q') {
+		if (input.toLowerCase() === 'q') {
+			stdout.write(ansiEscapes.clearTerminal);
 			exit();
 		}
 
@@ -29,7 +35,7 @@ function Router() {
 			return;
 		}
 
-		if (key.escape && navigation.route !== 'main-menu') {
+		if (key.escape && canGoBack) {
 			goBack();
 		}
 	});
@@ -47,6 +53,14 @@ function Router() {
 
 		case 'paper-search': {
 			return <PaperSearch />;
+		}
+
+		case 'search-results': {
+			return <SearchResults />;
+		}
+
+		case 'date-papers': {
+			return <DatePapers />;
 		}
 
 		case 'paper-list': {
@@ -83,6 +97,10 @@ function Router() {
 
 		case 'author-profile': {
 			return <AuthorProfile />;
+		}
+
+		case 'download-manager': {
+			return <DownloadManager />;
 		}
 
 		case 'settings': {

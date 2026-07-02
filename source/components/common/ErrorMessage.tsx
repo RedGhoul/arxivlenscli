@@ -1,12 +1,13 @@
 import React from 'react';
 import {Box, Text} from 'ink';
-import {colors, symbols, borders} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 interface ErrorMessageProps {
 	message: string;
 }
 
 export function ErrorMessage({message}: ErrorMessageProps) {
+	const {colors, symbols, borders} = useTheme();
 	const border = borders.rounded;
 
 	return (

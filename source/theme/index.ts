@@ -1,12 +1,3 @@
-export {colors, type ColorKey} from './colors.js';
-export {borders, separators, symbols, type BorderStyle} from './borders.js';
-export {
-	fonts,
-	decorators,
-	ASCII_LOGO,
-	ASCII_LOGO_COMPACT,
-} from './typography.js';
-
 import {colors} from './colors.js';
 import {borders, separators, symbols} from './borders.js';
 import {
@@ -16,13 +7,29 @@ import {
 	ASCII_LOGO_COMPACT,
 } from './typography.js';
 
+export {
+	colors,
+	colorSchemes,
+	type ColorKey,
+	type ColorPalette,
+	type ColorScheme,
+} from './colors.js';
+export {borders, separators, symbols, type BorderStyle} from './borders.js';
+export {
+	fonts,
+	decorators,
+	ASCII_LOGO,
+	ASCII_LOGO_COMPACT,
+} from './typography.js';
+export {useTheme} from './useTheme.js';
+
 // Animation timing constants
 export const timing = {
-	typeSpeed: 30, // ms per character for typing effect
-	blinkInterval: 500, // ms for blinking cursor
-	pulseInterval: 1000, // ms for pulsing indicators
-	bootDelay: 100, // ms delay between boot sequence lines
-	spinnerSpeed: 80, // ms per spinner frame
+	typeSpeed: 30, // Ms per character for typing effect
+	blinkInterval: 500, // Ms for blinking cursor
+	pulseInterval: 1000, // Ms for pulsing indicators
+	bootDelay: 100, // Ms delay between boot sequence lines
+	spinnerSpeed: 80, // Ms per spinner frame
 } as const;
 
 // Complete theme export

@@ -3,13 +3,9 @@ import {Box, Text, useInput} from 'ink';
 import {Header} from '../common/Header.js';
 import {Footer} from '../common/Footer.js';
 import {Frame} from '../common/Frame.js';
-import {
-	getSettings,
-	updateSetting,
-	resetSettings,
-	type Settings,
-} from '../../config/settings.js';
-import {colors, symbols, separators} from '../../theme/index.js';
+import {resetSettings, type Settings} from '../../config/settings.js';
+import {useApp} from '../../context/AppContext.js';
+import {useTheme} from '../../theme/index.js';
 
 type SettingKey = keyof Settings;
 
@@ -67,12 +63,37 @@ const SETTINGS_OPTIONS: SettingOption[] = [
 			{label: 'Mr. Robot', value: 'mr-robot'},
 		],
 	},
+	{
+		key: 'maxConcurrentDownloads',
+		label: 'Max concurrent downloads',
+		type: 'select',
+		options: [
+			{label: '1', value: 1},
+			{label: '2', value: 2},
+			{label: '3', value: 3},
+			{label: '4', value: 4},
+			{label: '5', value: 5},
+		],
+	},
+	{
+		key: 'fileNameFormat',
+		label: 'File name format',
+		type: 'select',
+		options: [
+			{label: 'Title + ID', value: 'title+id'},
+			{label: 'ID Only', value: 'id-only'},
+		],
+	},
 ];
 
 export function SettingsScreen() {
-	const [settings, setSettings] = useState<Settings>(getSettings);
+	const {colors, symbols, separators} = useTheme();
+	const {settings, updateSettings} = useApp();
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	const [message, setMessage] = useState<string | null>(null);
+	const [message, setMessage] = useState<{
+		text: string;
+		type: 'success' | 'error';
+	} | null>(null);
 
 	useEffect(() => {
 		if (message) {
@@ -87,37 +108,62 @@ export function SettingsScreen() {
 		return undefined;
 	}, [message]);
 
-	const currentOption = SETTINGS_OPTIONS[selectedIndex]!;
+	const currentOption = SETTINGS_OPTIONS[selectedIndex];
 
 	const handleToggle = () => {
-		const option = currentOption;
-		if (option.type === 'toggle') {
-			const newValue = !settings[option.key];
-			updateSetting(option.key, newValue as Settings[typeof option.key]);
-			setSettings({...settings, [option.key]: newValue});
+		if (currentOption?.type === 'toggle') {
+			const newValue = !settings[currentOption.key];
+			const result = updateSettings({
+				[currentOption.key]: newValue as Settings[typeof currentOption.key],
+			});
+			if (!result.success) {
+				setMessage({
+					text: result.error ?? 'Failed to update setting',
+					type: 'error',
+				});
+			}
 		}
 	};
 
 	const handleCycleSelect = (direction: 1 | -1) => {
-		const option = currentOption;
-		if (option.type === 'select' && option.options) {
-			const currentValue = settings[option.key];
-			const currentIndex = option.options.findIndex(
+		if (currentOption?.type === 'select' && currentOption.options) {
+			const currentValue = settings[currentOption.key];
+			const currentIndex = currentOption.options.findIndex(
 				o => o.value === currentValue,
 			);
 			const newIndex =
-				(currentIndex + direction + option.options.length) %
-				option.options.length;
-			const newValue = option.options[newIndex]!.value;
-			updateSetting(option.key, newValue as Settings[typeof option.key]);
-			setSettings({...settings, [option.key]: newValue});
+				(currentIndex + direction + currentOption.options.length) %
+				currentOption.options.length;
+			const newOption = currentOption.options[newIndex];
+			if (newOption) {
+				const result = updateSettings({
+					[currentOption.key]:
+						newOption.value as Settings[typeof currentOption.key],
+				});
+				if (!result.success) {
+					setMessage({
+						text: result.error ?? 'Failed to update setting',
+						type: 'error',
+					});
+				}
+			}
 		}
 	};
 
 	const handleReset = () => {
 		resetSettings();
-		setSettings(getSettings());
-		setMessage('Settings reset to defaults');
+		updateSettings({
+			resultsPerPage: 20,
+			defaultSort: 'relevance',
+			showTwoLineSummaries: true,
+			compactMode: false,
+			autoRefreshKeyFindings: true,
+			colorScheme: 'default',
+			maxConcurrentDownloads: 3,
+			fileNameFormat: 'title+id',
+			searchHistory: [],
+		});
+		setMessage({text: 'Settings reset to defaults', type: 'success'});
 	};
 
 	useInput((input, key) => {
@@ -126,17 +172,17 @@ export function SettingsScreen() {
 		} else if (key.downArrow) {
 			setSelectedIndex(i => Math.min(SETTINGS_OPTIONS.length - 1, i + 1));
 		} else if (key.return || input === ' ') {
-			if (currentOption.type === 'toggle') {
+			if (currentOption?.type === 'toggle') {
 				handleToggle();
 			} else {
 				handleCycleSelect(1);
 			}
 		} else if (key.leftArrow) {
-			if (currentOption.type === 'select') {
+			if (currentOption?.type === 'select') {
 				handleCycleSelect(-1);
 			}
 		} else if (key.rightArrow) {
-			if (currentOption.type === 'select') {
+			if (currentOption?.type === 'select') {
 				handleCycleSelect(1);
 			}
 		} else if (input === 'r') {
@@ -173,6 +219,17 @@ export function SettingsScreen() {
 		<Box flexDirection="column">
 			<Header subtitle="Settings" showLogo={false} compact />
 
+			{settings.downloadPath ? (
+				<Box paddingX={1} marginBottom={1}>
+					<Text color={colors.muted}>Download Path: </Text>
+					<Text color={colors.primary}>{settings.downloadPath}</Text>
+				</Box>
+			) : (
+				<Box paddingX={1} marginBottom={1}>
+					<Text color={colors.error}>No download path set!</Text>
+				</Box>
+			)}
+
 			<Frame title="CONFIGURATION" width={55}>
 				<Box flexDirection="column" paddingY={1}>
 					<Box marginBottom={1}>
@@ -205,7 +262,7 @@ export function SettingsScreen() {
 						</Text>
 					</Box>
 
-					{SETTINGS_OPTIONS.slice(4).map((option, index) => (
+					{SETTINGS_OPTIONS.slice(4, 6).map((option, index) => (
 						<Box key={option.key} paddingLeft={2}>
 							<Text
 								color={
@@ -220,13 +277,41 @@ export function SettingsScreen() {
 							{renderValue(option)}
 						</Box>
 					))}
+
+					<Box marginY={1}>
+						<Text color={colors.border}>{separators.single(45)}</Text>
+					</Box>
+
+					<Box marginBottom={1}>
+						<Text bold color={colors.heading}>
+							{symbols.arrow} Downloads
+						</Text>
+					</Box>
+
+					{SETTINGS_OPTIONS.slice(6).map((option, index) => (
+						<Box key={option.key} paddingLeft={2}>
+							<Text
+								color={
+									selectedIndex === index + 6
+										? colors.primary
+										: colors.foreground
+								}
+							>
+								{selectedIndex === index + 6 ? symbols.arrowRight : ' '}{' '}
+								{option.label}:{' '}
+							</Text>
+							{renderValue(option)}
+						</Box>
+					))}
 				</Box>
 			</Frame>
 
 			{message && (
 				<Box marginY={1}>
-					<Text color={colors.success}>
-						{symbols.checkmark} {message}
+					<Text
+						color={message.type === 'error' ? colors.error : colors.success}
+					>
+						{message.type === 'error' ? '!' : symbols.checkmark} {message.text}
 					</Text>
 				</Box>
 			)}

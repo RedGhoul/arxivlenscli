@@ -1,0 +1,202 @@
+import React, {useState, useEffect, useRef, useCallback} from 'react';
+import {Box, Text} from 'ink';
+import {Header} from '../common/Header.js';
+import {Footer} from '../common/Footer.js';
+import {Pagination} from '../common/Pagination.js';
+import {Spinner} from '../common/Spinner.js';
+import {ErrorMessage} from '../common/ErrorMessage.js';
+import {PaperListItem} from './PaperListItem.js';
+import {useNavigation} from '../../hooks/useNavigation.js';
+import {usePaperSearch} from '../../hooks/usePapers.js';
+import {useApp} from '../../context/AppContext.js';
+import {useTheme} from '../../theme/index.js';
+import {usePaperListNavigation} from '../../hooks/usePaperListNavigation.js';
+import type {
+	SearchParams,
+	PaperListItem as PaperListItemType,
+} from '../../api/types.js';
+
+export function SearchResults() {
+	const {params, navigate, goBack} = useNavigation();
+	const {setSelectedPaper} = useApp();
+	const {search, loading, error} = usePaperSearch();
+	const {colors} = useTheme();
+
+	const [papers, setPapers] = useState<PaperListItemType[]>([]);
+
+	const title = (params['title'] as string) || 'Papers';
+	const searchParams = params['searchParams'] as SearchParams;
+	const page = (params['page'] as number) || 1;
+	const totalPages = (params['totalPages'] as number) || 1;
+	const hasNext = (params['hasNext'] as boolean) || false;
+	const hasPrev = (params['hasPrev'] as boolean) || false;
+	const totalCount = (params['totalCount'] as number) || 0;
+
+	// Track request ID to prevent stale updates from out-of-order responses
+	const requestIdRef = useRef(0);
+	// Track what was last fetched to prevent duplicate API calls
+	const lastFetchKeyRef = useRef('');
+
+	useEffect(() => {
+		const fetchKey = JSON.stringify({searchParams, page});
+		if (fetchKey === lastFetchKeyRef.current) return;
+		lastFetchKeyRef.current = fetchKey;
+
+		// Increment request ID to track this specific request
+		const currentRequestId = ++requestIdRef.current;
+
+		async function fetchResults() {
+			if (searchParams) {
+				const result = await search({...searchParams, page});
+				// Only update state if this is still the current request
+				if (result && currentRequestId === requestIdRef.current) {
+					setPapers(result.papers || []);
+				}
+			}
+		}
+
+		void fetchResults();
+	}, [page, search, searchParams]);
+
+	const handleSelectPaper = useCallback(
+		(paper: PaperListItemType) => {
+			setSelectedPaper(paper);
+			navigate('paper-detail', {
+				paperId: paper.genSlug,
+			});
+		},
+		[setSelectedPaper, navigate],
+	);
+
+	const handlePreviousPage = useCallback(async () => {
+		try {
+			if (searchParams) {
+				const newPage = page - 1;
+				const result = await search({...searchParams, page: newPage});
+				if (result) {
+					lastFetchKeyRef.current = JSON.stringify({
+						searchParams,
+						page: newPage,
+					});
+					setPapers(result.papers || []);
+					navigate('search-results', {
+						...params,
+						page: result.page,
+						totalPages: result.totalPages,
+						hasNext: result.hasNextPage,
+						hasPrev: result.hasPreviousPage,
+					});
+				}
+			}
+		} catch {
+			// Error is already surfaced via useApi's error state
+		}
+	}, [searchParams, search, page, navigate, params]);
+
+	const handleNextPage = useCallback(async () => {
+		try {
+			if (searchParams) {
+				const newPage = page + 1;
+				const result = await search({...searchParams, page: newPage});
+				if (result) {
+					lastFetchKeyRef.current = JSON.stringify({
+						searchParams,
+						page: newPage,
+					});
+					setPapers(result.papers || []);
+					navigate('search-results', {
+						...params,
+						page: result.page,
+						totalPages: result.totalPages,
+						hasNext: result.hasNextPage,
+						hasPrev: result.hasPreviousPage,
+					});
+				}
+			}
+		} catch {
+			// Error is already surfaced via useApi's error state
+		}
+	}, [searchParams, search, page, navigate, params]);
+
+	const handleDownload = useCallback(
+		(selectedPapers: PaperListItemType[]) => {
+			navigate('download-manager', {
+				papers: selectedPapers,
+			});
+		},
+		[navigate],
+	);
+
+	const {selectedIndex, selectedForDownload} = usePaperListNavigation({
+		papers,
+		loading,
+		page,
+		hasNext,
+		hasPrev,
+		onSelectPaper: handleSelectPaper,
+		onPreviousPage: handlePreviousPage,
+		onNextPage: handleNextPage,
+		onGoBack: goBack,
+		onDownload: handleDownload,
+		enableDownloadSelection: true,
+	});
+
+	if (loading) {
+		return (
+			<Box flexDirection="column">
+				<Header subtitle={title} showLogo={false} compact />
+				<Spinner message="Loading papers..." />
+			</Box>
+		);
+	}
+
+	if (error) {
+		return (
+			<Box flexDirection="column">
+				<Header subtitle={title} showLogo={false} compact />
+				<ErrorMessage message={error} />
+				<Footer hints={[]} />
+			</Box>
+		);
+	}
+
+	return (
+		<Box flexDirection="column">
+			<Header
+				subtitle={`${title} (${totalCount} results)`}
+				showLogo={false}
+				compact
+			/>
+
+			{papers.length === 0 ? (
+				<Text color={colors.muted}>No papers found.</Text>
+			) : (
+				<Box flexDirection="column">
+					{papers.map((paper, index) => (
+						<PaperListItem
+							key={paper.paperId}
+							paper={paper}
+							isSelected={index === selectedIndex}
+							index={index}
+							isSelectedForDownload={selectedForDownload.has(paper.paperId)}
+						/>
+					))}
+				</Box>
+			)}
+
+			<Pagination
+				currentPage={page}
+				totalPages={totalPages}
+				hasNext={hasNext}
+				hasPrev={hasPrev}
+			/>
+
+			<Footer
+				hints={[
+					{key: '\u2191\u2193', action: 'Navigate'},
+					{key: 'ENTER', action: 'View'},
+				]}
+			/>
+		</Box>
+	);
+}

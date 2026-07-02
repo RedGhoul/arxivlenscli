@@ -41,27 +41,42 @@ export function PdfViewer() {
 
 	// Load image when switching to image mode
 	useEffect(() => {
-		if (viewMode === 'image') {
-			const loadImage = async () => {
-				setLoadingImage(true);
-				try {
-					const img = await loadPageImage(currentPage);
-					if (img) {
-						const rendered = await terminalImage.buffer(img.imageBuffer, {
-							width: '80%',
-							preserveAspectRatio: true,
-						});
-						setImageData(rendered);
-					}
-				} catch {
+		if (viewMode !== 'image') return;
+
+		let cancelled = false;
+
+		const loadImage = async () => {
+			setLoadingImage(true);
+			try {
+				const img = await loadPageImage(currentPage);
+				if (cancelled) return;
+
+				if (img) {
+					const rendered = await terminalImage.buffer(img.imageBuffer, {
+						width: '80%',
+						preserveAspectRatio: true,
+					});
+					if (cancelled) return;
+
+					setImageData(rendered);
+				}
+			} catch {
+				// PDF rendering failed - clear image and let finally handle loading state
+				if (!cancelled) {
 					setImageData(null);
-				} finally {
+				}
+			} finally {
+				if (!cancelled) {
 					setLoadingImage(false);
 				}
-			};
+			}
+		};
 
-			loadImage();
-		}
+		loadImage();
+
+		return () => {
+			cancelled = true;
+		};
 	}, [viewMode, currentPage, loadPageImage]);
 
 	useInput((input, key) => {

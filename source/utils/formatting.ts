@@ -13,7 +13,10 @@ export function formatDate(isoDate: string | null | undefined): string {
 }
 
 export function getApiDateString(date: Date): string {
-	return date.toISOString().split('T')[0]!;
+	const isoString = date.toISOString();
+	const datePart = isoString.split('T')[0];
+	// Fallback should never be needed as ISO strings always have 'T' separator
+	return datePart ?? isoString.slice(0, 10);
 }
 
 export function getPresetDate(preset: string): string {
@@ -66,4 +69,8 @@ export function parseCategories(
 ): string[] {
 	if (!categoriesStr) return [];
 	return categoriesStr.split(' ').filter(Boolean);
+}
+
+export function formatCount(n: number): string {
+	return n.toLocaleString('en-US');
 }

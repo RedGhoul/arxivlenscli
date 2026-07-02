@@ -9,8 +9,11 @@
 	},
 	"scripts": {
 		"build": "tsc",
+		"start": "npm run build && node dist/cli.js",
 		"dev": "tsc --watch",
-		"test": "prettier --check . && xo && ava"
+		"test": "prettier --check . && xo && jest",
+		"test:watch": "jest --watch",
+		"test:coverage": "jest --coverage"
 	},
 	"files": [
 		"dist"
@@ -19,6 +22,7 @@
 		"@napi-rs/canvas": "^0.1.88",
 		"@types/figlet": "^1.7.0",
 		"@types/gradient-string": "^1.1.6",
+		"ansi-escapes": "^7.2.0",
 		"axios": "^1.13.2",
 		"cli-spinners": "^3.3.0",
 		"conf": "^15.0.2",
@@ -37,35 +41,77 @@
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^3.0.1",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^14.3.1",
+		"@testing-library/user-event": "^14.6.1",
+		"@types/jest": "^29.5.14",
 		"@types/react": "^18.0.32",
 		"@vdemedes/prettier-config": "^2.0.1",
-		"ava": "^5.2.0",
 		"chalk": "^5.2.0",
 		"eslint-config-xo-react": "^0.27.0",
 		"eslint-plugin-react": "^7.32.2",
 		"eslint-plugin-react-hooks": "^4.6.0",
-		"ink-testing-library": "^3.0.0",
+		"jest": "^29.7.0",
+		"jest-environment-jsdom": "^29.7.0",
+		"msw": "^2.7.0",
 		"prettier": "^2.8.7",
+		"ts-jest": "^29.2.5",
 		"ts-node": "^10.9.1",
 		"tsx": "^4.21.0",
 		"typescript": "^5.0.3",
 		"xo": "^0.53.1"
 	},
-	"ava": {
-		"extensions": {
-			"ts": "module",
-			"tsx": "module"
-		},
-		"workerThreads": false,
-		"nodeArguments": [
-			"--import=tsx"
-		]
-	},
 	"xo": {
 		"extends": "xo-react",
 		"prettier": true,
+		"overrides": [
+			{
+				"files": [
+					"test/**/*.{ts,js,cjs}"
+				],
+				"rules": {
+					"@typescript-eslint/no-unsafe-call": "off",
+					"import/no-unassigned-import": "off",
+					"n/file-extension-in-import": "off"
+				}
+			},
+			{
+				"files": [
+					"test/setup.ts",
+					"test/setup.js",
+					"test/resolver.cjs"
+				],
+				"rules": {
+					"unicorn/prefer-global/text-encoder": "off",
+					"unicorn/prefer-global/text-decoder": "off",
+					"unicorn/prefer-node-protocol": "off",
+					"unicorn/prefer-module": "off",
+					"n/no-restricted-require": "off",
+					"n/prefer-global/text-encoder": "off",
+					"n/prefer-global/text-decoder": "off"
+				}
+			},
+			{
+				"files": [
+					"source/config/settings.ts"
+				],
+				"rules": {
+					"unicorn/prefer-type-error": "off"
+				}
+			},
+			{
+				"files": [
+					"source/components/papers/PaperDetail.tsx"
+				],
+				"rules": {
+					"@typescript-eslint/no-confusing-void-expression": "off",
+					"no-lone-blocks": "off"
+				}
+			}
+		],
 		"rules": {
 			"react/prop-types": "off",
+			"react/no-array-index-key": "off",
 			"unicorn/expiring-todo-comments": "off",
 			"unicorn/filename-case": "off",
 			"unicorn/prevent-abbreviations": "off",

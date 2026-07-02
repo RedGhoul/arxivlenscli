@@ -105,7 +105,7 @@ export function AuthorList() {
 				<Box flexDirection="column">
 					{authors.map((author, index) => (
 						<AuthorListItem
-							key={author.genSlug}
+							key={author.genSlug || author.name || index}
 							author={author}
 							isSelected={index === selectedIndex}
 							index={(page - 1) * 10 + index}

@@ -7,6 +7,12 @@ import React, {
 } from 'react';
 import type {Route} from '../utils/constants.js';
 import type {PaperListItem, SearchParams} from '../api/types.js';
+import type {Settings} from '../config/settings.js';
+import {
+	getSettings,
+	updateSettings as updateConfigSettings,
+} from '../config/settings.js';
+import {validateDownloadPath} from '../api/downloads.js';
 
 interface NavigationState {
 	route: Route;
@@ -29,6 +35,12 @@ interface AppState {
 	papersList: PaperListItem[];
 	setPapersList: (papers: PaperListItem[]) => void;
 
+	settings: Settings;
+	updateSettings: (settings: Partial<Settings>) => {
+		success: boolean;
+		error?: string;
+	};
+
 	showHelp: boolean;
 	toggleHelp: () => void;
 }
@@ -48,11 +60,37 @@ export function AppProvider({children}: {children: ReactNode}) {
 		null,
 	);
 	const [papersList, setPapersList] = useState<PaperListItem[]>([]);
+	const [settings, setSettings] = useState<Settings>(getSettings());
 	const [showHelp, setShowHelp] = useState(false);
 
 	const toggleHelp = useCallback(() => {
 		setShowHelp(prev => !prev);
 	}, []);
+
+	const updateSettings = useCallback(
+		(updates: Partial<Settings>): {success: boolean; error?: string} => {
+			// Validate download path before persisting
+			if (updates.downloadPath !== undefined && updates.downloadPath !== null) {
+				try {
+					validateDownloadPath(updates.downloadPath);
+				} catch (error) {
+					return {
+						success: false,
+						error:
+							error instanceof Error ? error.message : 'Invalid download path',
+					};
+				}
+			}
+
+			const result = updateConfigSettings(updates);
+			if (result.success) {
+				setSettings(prev => ({...prev, ...updates}));
+			}
+
+			return result;
+		},
+		[],
+	);
 
 	const navigate = useCallback(
 		(route: Route, params: Record<string, unknown> = {}) => {
@@ -69,7 +107,9 @@ export function AppProvider({children}: {children: ReactNode}) {
 		setNavigation(prev => {
 			if (prev.history.length === 0) return prev;
 			const history = [...prev.history];
-			const last = history.pop()!;
+			const last = history.pop();
+			// Defensive check - should never be undefined due to length check above
+			if (!last) return prev;
 			return {
 				route: last.route,
 				params: last.params,
@@ -93,6 +133,8 @@ export function AppProvider({children}: {children: ReactNode}) {
 				setLastSearchParams,
 				papersList,
 				setPapersList,
+				settings,
+				updateSettings,
 				showHelp,
 				toggleHelp,
 			}}

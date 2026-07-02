@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, Text} from 'ink';
-import {colors, borders} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 interface PaginationProps {
 	currentPage: number;
@@ -15,6 +15,7 @@ export function Pagination({
 	hasNext,
 	hasPrev,
 }: PaginationProps) {
+	const {colors, borders} = useTheme();
 	const border = borders.single;
 
 	return (

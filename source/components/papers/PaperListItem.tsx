@@ -2,15 +2,22 @@ import React from 'react';
 import {Box, Text} from 'ink';
 import type {PaperListItem as PaperListItemType} from '../../api/types.js';
 import {formatDate, formatAuthors, truncate} from '../../utils/formatting.js';
-import {colors, symbols, decorators} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 interface PaperListItemProps {
 	paper: PaperListItemType;
 	isSelected: boolean;
 	index: number;
+	isSelectedForDownload?: boolean;
 }
 
-export function PaperListItem({paper, isSelected, index}: PaperListItemProps) {
+export function PaperListItem({
+	paper,
+	isSelected,
+	index,
+	isSelectedForDownload = false,
+}: PaperListItemProps) {
+	const {colors, symbols, decorators} = useTheme();
 	const primaryCategory =
 		paper.categories?.split(' ')[0] || paper.categories || 'Unknown';
 
@@ -26,6 +33,11 @@ export function PaperListItem({paper, isSelected, index}: PaperListItemProps) {
 					{isSelected ? symbols.arrowRight : ' '}
 				</Text>
 				<Text color={colors.muted}> {decorators.index(index + 1)} </Text>
+				{isSelectedForDownload ? (
+					<Text color={colors.success}>[✓]</Text>
+				) : (
+					<Text color={colors.muted}>[ ]</Text>
+				)}
 				<Text
 					color={isSelected ? colors.heading : colors.foreground}
 					bold={isSelected}

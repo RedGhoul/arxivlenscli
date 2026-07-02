@@ -7,22 +7,24 @@ import {Spinner} from '../common/Spinner.js';
 import {ErrorMessage} from '../common/ErrorMessage.js';
 import {PaperListItem} from './PaperListItem.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
-import {usePaperSearch, usePapersByDate} from '../../hooks/usePapers.js';
+import {usePaperSearch} from '../../hooks/usePapers.js';
 import {useApp} from '../../context/AppContext.js';
 import type {SearchParams} from '../../api/types.js';
-import {colors} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
+import type {Route} from '../../utils/constants.js';
 
 export function PaperList() {
 	const {params, navigate, goBack} = useNavigation();
 	const {papersList, setPapersList, setSelectedPaper} = useApp();
 	const {search, loading: searchLoading, error: searchError} = usePaperSearch();
-	const {
-		fetchByDate,
-		loading: dateLoading,
-		error: dateError,
-	} = usePapersByDate();
+	const {colors} = useTheme();
+	const loading = searchLoading;
+	const error = searchError;
 
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [selectedForDownload, setSelectedForDownload] = useState<Set<string>>(
+		new Set(),
+	);
 
 	const title = (params['title'] as string) || 'Papers';
 	const source = params['source'] as 'search' | 'date' | 'category';
@@ -33,53 +35,36 @@ export function PaperList() {
 	const totalCount = (params['totalCount'] as number) || 0;
 	const pageSize = (params['pageSize'] as number) || 20;
 
-	const loading = searchLoading || dateLoading;
-	const error = searchError || dateError;
-
 	useEffect(() => {
 		setSelectedIndex(0);
-	}, [papersList]);
+		setSelectedForDownload(new Set());
+	}, [page]);
 
 	const handlePageChange = async (newPage: number) => {
-		if (source === 'search' && params['searchParams']) {
-			const searchParams = params['searchParams'] as SearchParams;
-			const result = await search({...searchParams, page: newPage});
-			if (result) {
-				setPapersList(result.papers);
-				navigate('paper-list', {
-					...params,
-					page: result.page,
-					totalPages: result.totalPages,
-					hasNext: result.hasNextPage,
-					hasPrev: result.hasPreviousPage,
-				});
-			}
-		} else if (source === 'date' && params['date']) {
-			const result = await fetchByDate(params['date'] as string, newPage);
-			if (result) {
-				setPapersList(result.papers || []);
-				if (result.pagination) {
+		try {
+			if (source === 'search' && params['searchParams']) {
+				const searchParams = params['searchParams'] as SearchParams;
+				const result = await search({...searchParams, page: newPage});
+				if (result) {
+					setPapersList(result.papers || []);
 					navigate('paper-list', {
 						...params,
-						page: result.pagination.page,
-						totalPages: Math.ceil(
-							result.pagination.total / result.pagination.limit,
-						),
-						hasNext:
-							result.pagination.page * result.pagination.limit <
-							result.pagination.total,
-						hasPrev: result.pagination.page > 1,
-					});
-				} else {
-					navigate('paper-list', {
-						...params,
-						page: newPage,
-						totalPages: 1,
-						hasNext: false,
-						hasPrev: newPage > 1,
+						page: result.page,
+						totalPages: result.totalPages,
+						hasNext: result.hasNextPage,
+						hasPrev: result.hasPreviousPage,
 					});
 				}
+			} else if (source === 'date' && params['date']) {
+				navigate('paper-list', {
+					...params,
+					page: newPage,
+					hasNext: newPage * pageSize < (params['totalCount'] as number),
+					hasPrev: newPage > 1,
+				});
 			}
+		} catch {
+			// Error is already surfaced via useApi's error state
 		}
 	};
 
@@ -91,12 +76,52 @@ export function PaperList() {
 			return;
 		}
 
+		if (papersList.length === 0) return;
+
 		if (key.upArrow) {
 			setSelectedIndex(prev => Math.max(0, prev - 1));
 		}
 
 		if (key.downArrow) {
-			setSelectedIndex(prev => Math.min(papersList.length - 1, prev + 1));
+			const maxIndex =
+				Math.min(pageSize, papersList.length - (page - 1) * pageSize) - 1;
+			setSelectedIndex(prev => Math.min(maxIndex, prev + 1));
+		}
+
+		if (key.return) {
+			const actualIndex = (page - 1) * pageSize + selectedIndex;
+			if (papersList[actualIndex]) {
+				setSelectedPaper(papersList[actualIndex]);
+				navigate('paper-detail', {
+					paperId: papersList[actualIndex].genSlug,
+				});
+			}
+		}
+
+		if (input === ' ') {
+			const actualIndex = (page - 1) * pageSize + selectedIndex;
+			const paper = papersList[actualIndex];
+			if (paper) {
+				setSelectedForDownload(prev => {
+					const newSet = new Set(prev);
+					if (newSet.has(paper.paperId)) {
+						newSet.delete(paper.paperId);
+					} else {
+						newSet.add(paper.paperId);
+					}
+					// eslint-disable-next-line @typescript-eslint/padding-line-between-statements
+					return newSet;
+				});
+			}
+		}
+
+		if (input === 'd' && selectedForDownload.size > 0) {
+			const selectedPapers = papersList.filter(paper =>
+				selectedForDownload.has(paper.paperId),
+			);
+			navigate('download-manager' as Route, {
+				papers: selectedPapers,
+			});
 		}
 
 		if ((input === 'p' || key.leftArrow) && hasPrev) {
@@ -105,11 +130,6 @@ export function PaperList() {
 
 		if ((input === 'n' || key.rightArrow) && hasNext) {
 			handlePageChange(page + 1);
-		}
-
-		if (key.return && papersList[selectedIndex]) {
-			setSelectedPaper(papersList[selectedIndex]);
-			navigate('paper-detail', {paperId: papersList[selectedIndex].genSlug});
 		}
 	});
 
@@ -144,14 +164,17 @@ export function PaperList() {
 				<Text color={colors.muted}>No papers found.</Text>
 			) : (
 				<Box flexDirection="column">
-					{papersList.map((paper, index) => (
-						<PaperListItem
-							key={paper.paperId}
-							paper={paper}
-							isSelected={index === selectedIndex}
-							index={(page - 1) * pageSize + index}
-						/>
-					))}
+					{papersList
+						.slice((page - 1) * pageSize, page * pageSize)
+						.map((paper, index) => (
+							<PaperListItem
+								key={paper.paperId}
+								paper={paper}
+								isSelected={index === selectedIndex}
+								index={(page - 1) * pageSize + index}
+								isSelectedForDownload={selectedForDownload.has(paper.paperId)}
+							/>
+						))}
 				</Box>
 			)}
 

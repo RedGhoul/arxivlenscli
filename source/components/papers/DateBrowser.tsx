@@ -13,7 +13,7 @@ import {usePageSize} from '../../hooks/usePageSize.js';
 import {useApp} from '../../context/AppContext.js';
 import {DATE_PRESETS} from '../../utils/constants.js';
 import {getPresetDate, getApiDateString} from '../../utils/formatting.js';
-import {colors, symbols} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 type Mode = 'preset' | 'custom';
 
@@ -21,6 +21,7 @@ export function DateBrowser() {
 	const {navigate, goBack} = useNavigation();
 	const {fetchByDate, loading, error} = usePapersByDate();
 	const {setPapersList} = useApp();
+	const {colors, symbols} = useTheme();
 	const pageSize = usePageSize();
 
 	const [mode, setMode] = useState<Mode>('preset');
@@ -28,33 +29,30 @@ export function DateBrowser() {
 
 	const loadPapersForDate = async (date: string) => {
 		const result = await fetchByDate(date, 1, pageSize);
+		const allPapers = result?.papers || [];
 		if (result?.pagination) {
-			setPapersList(result.papers || []);
-			navigate('paper-list', {
+			setPapersList(allPapers);
+			navigate('date-papers', {
 				title: `Papers from ${date}`,
 				source: 'date',
 				date,
 				totalCount: result.pagination.total,
-				page: result.pagination.page,
-				totalPages: Math.ceil(
-					result.pagination.total / result.pagination.limit,
-				),
-				hasNext:
-					result.pagination.page * result.pagination.limit <
-					result.pagination.total,
-				hasPrev: result.pagination.page > 1,
+				page: 1,
+				totalPages: Math.ceil(result.pagination.total / pageSize),
+				hasNext: pageSize < result.pagination.total,
+				hasPrev: false,
 				pageSize,
 			});
-		} else if (result) {
-			setPapersList(result.papers || []);
-			navigate('paper-list', {
+		} else {
+			setPapersList(allPapers);
+			navigate('date-papers', {
 				title: `Papers from ${date}`,
 				source: 'date',
 				date,
-				totalCount: result.papers?.length || 0,
+				totalCount: allPapers.length,
 				page: 1,
-				totalPages: 1,
-				hasNext: false,
+				totalPages: Math.ceil(allPapers.length / pageSize),
+				hasNext: pageSize < allPapers.length,
 				hasPrev: false,
 				pageSize,
 			});

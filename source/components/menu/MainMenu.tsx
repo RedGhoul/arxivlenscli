@@ -5,11 +5,12 @@ import {Footer} from '../common/Footer.js';
 import {Frame} from '../common/Frame.js';
 import {useNavigation} from '../../hooks/useNavigation.js';
 import {MENU_ITEMS, type Route} from '../../utils/constants.js';
-import {colors, symbols, decorators} from '../../theme/index.js';
+import {useTheme} from '../../theme/index.js';
 
 export function MainMenu() {
 	const {navigate} = useNavigation();
 	const {exit} = useInkApp();
+	const {colors, symbols, decorators} = useTheme();
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
 	const handleSelect = (value: string) => {

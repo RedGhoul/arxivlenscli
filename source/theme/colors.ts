@@ -1,30 +1,103 @@
-// Mr. Robot inspired color palette - darker, subdued with strategic green accents
-export const colors = {
-	// Primary colors - the signature matrix green
-	primary: '#00ff41', // Matrix green - main accent, selected items, headers
-	secondary: '#008f11', // Darker green - secondary elements, hover states
-	tertiary: '#00cc33', // Mid green - active states
+export type ColorScheme =
+	| 'default'
+	| 'monochrome'
+	| 'high-contrast'
+	| 'mr-robot';
 
-	// Base colors
-	foreground: '#b4b4b4', // Muted gray - body text
-	background: '#0a0a0a', // Near black - background
-	heading: '#ffffff', // Pure white - headings, important text
+export interface ColorPalette {
+	primary: string;
+	secondary: string;
+	tertiary: string;
+	foreground: string;
+	background: string;
+	heading: string;
+	border: string;
+	borderHighlight: string;
+	muted: string;
+	caption: string;
+	success: string;
+	warning: string;
+	error: string;
+	info: string;
+	highlight: string;
+	scanline: string;
+}
 
-	// UI elements
-	border: '#333333', // Subtle gray - default borders
-	borderHighlight: '#00ff41', // Green - focused/active borders
-	muted: '#555555', // Dimmed text
-	caption: '#666666', // Dark gray - captions, timestamps
+export const colorSchemes: Record<ColorScheme, ColorPalette> = {
+	default: {
+		primary: '#00bfff',
+		secondary: '#0099cc',
+		tertiary: '#0077b3',
+		foreground: '#cccccc',
+		background: '#0d1117',
+		heading: '#ffffff',
+		border: '#30363d',
+		borderHighlight: '#00bfff',
+		muted: '#8b949e',
+		caption: '#8b949e',
+		success: '#3fb950',
+		warning: '#d29922',
+		error: '#f85149',
+		info: '#00bfff',
+		highlight: '#161b22',
+		scanline: '#00bfff20',
+	},
+	monochrome: {
+		primary: '#ffffff',
+		secondary: '#cccccc',
+		tertiary: '#999999',
+		foreground: '#cccccc',
+		background: '#0d1117',
+		heading: '#ffffff',
+		border: '#30363d',
+		borderHighlight: '#ffffff',
+		muted: '#8b949e',
+		caption: '#8b949e',
+		success: '#e0e0e0',
+		warning: '#c0c0c0',
+		error: '#a0a0a0',
+		info: '#d0d0d0',
+		highlight: '#1c2128',
+		scanline: '#ffffff10',
+	},
+	'high-contrast': {
+		primary: '#ffff00',
+		secondary: '#ffcc00',
+		tertiary: '#ff9900',
+		foreground: '#ffffff',
+		background: '#000000',
+		heading: '#ffffff',
+		border: '#ffffff',
+		borderHighlight: '#ffff00',
+		muted: '#888888',
+		caption: '#aaaaaa',
+		success: '#00ff00',
+		warning: '#ffff00',
+		error: '#ff0000',
+		info: '#00ffff',
+		highlight: '#333333',
+		scanline: '#ffff0030',
+	},
+	'mr-robot': {
+		primary: '#00ff41',
+		secondary: '#008f11',
+		tertiary: '#00cc33',
+		foreground: '#b4b4b4',
+		background: '#0a0a0a',
+		heading: '#ffffff',
+		border: '#333333',
+		borderHighlight: '#00ff41',
+		muted: '#555555',
+		caption: '#666666',
+		success: '#00ff41',
+		warning: '#ffcc00',
+		error: '#ff0040',
+		info: '#0080ff',
+		highlight: '#1a1a1a',
+		scanline: '#00ff4120',
+	},
+};
 
-	// Status colors
-	success: '#00ff41', // Green
-	warning: '#ffcc00', // Amber
-	error: '#ff0040', // Red
-	info: '#0080ff', // Blue (rare accent)
+export const colors = colorSchemes.default;
 
-	// Special
-	highlight: '#1a1a1a', // Selection background
-	scanline: '#00ff4120', // Transparent green for effects
-} as const;
-
-export type ColorKey = keyof typeof colors;
+export type ColorKey = keyof ColorPalette;
